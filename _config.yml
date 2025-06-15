@@ -5,6 +5,9 @@ email: your@email.com
 baseurl: "" # GitHub Pages root 專案請留空
 url: "https://justin2061.github.io"
 
+permalink: /:year/:month/:day/:title/
+
+
 # 使用更專業的主題
 theme: minima
 
