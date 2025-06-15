@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# 網站地圖位置
+Sitemap: https://justin2061.github.io/sitemap.xml
+
+# 不允許索引的路徑（如果有的話）
+# Disallow: /private/
+# Disallow: /admin/
+
+# 允許所有搜尋引擎爬取
+# 這有助於提升 SEO 效果 

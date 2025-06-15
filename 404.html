@@ -1,0 +1,246 @@
+---
+layout: default
+title: 頁面未找到 | 404
+permalink: /404.html
+---
+
+<style>
+  .error-container {
+    text-align: center;
+    padding: 4rem 2rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .error-code {
+    font-size: 8rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+    line-height: 1;
+  }
+  
+  .error-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+  }
+  
+  .error-description {
+    font-size: 1.1rem;
+    color: #5a6c7d;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+  
+  .error-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .btn {
+    display: inline-block;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-primary {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+  }
+  
+  .btn-secondary {
+    background-color: #ecf0f1;
+    color: #2c3e50;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #d5dbdb;
+    transform: translateY(-2px);
+  }
+  
+  .search-box {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  }
+  
+  .popular-links {
+    margin-top: 3rem;
+    text-align: left;
+  }
+  
+  .popular-links h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  
+  .popular-links ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .popular-links li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .popular-links a {
+    color: #3498db;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .popular-links a:hover {
+    background-color: #f8f9fa;
+    text-decoration: none;
+  }
+  
+  .icon {
+    margin-right: 0.5rem;
+    font-size: 1.2rem;
+  }
+  
+  @media (min-width: 768px) {
+    .error-actions {
+      flex-direction: row;
+      justify-content: center;
+    }
+    
+    .error-code {
+      font-size: 10rem;
+    }
+  }
+</style>
+
+<div class="error-container">
+  <div class="error-code">404</div>
+  <h1 class="error-title">糟糕！頁面走失了</h1>
+  <p class="error-description">
+    你要找的頁面可能已經搬家、改名，或者暫時無法使用。<br>
+    別擔心，讓我們幫你找到正確的方向！
+  </p>
+  
+  <div class="error-actions">
+    <a href="{{ '/' | relative_url }}" class="btn btn-primary">
+      🏠 回到首頁
+    </a>
+    <a href="{{ '/archive/' | relative_url }}" class="btn btn-secondary">
+      📚 瀏覽所有文章
+    </a>
+  </div>
+  
+  <div class="search-box">
+    <h3 style="margin-top: 0; color: #2c3e50;">🔍 搜尋內容</h3>
+    <input 
+      type="text" 
+      class="search-input" 
+      placeholder="輸入關鍵字搜尋文章..."
+      id="search-input"
+      onkeypress="handleSearch(event)"
+    >
+    <p style="font-size: 0.9rem; color: #6c757d; margin-top: 0.5rem; margin-bottom: 0;">
+      按 Enter 鍵在 Google 中搜尋本站內容
+    </p>
+  </div>
+  
+  <div class="popular-links">
+    <h3>🌟 熱門內容</h3>
+    <ul>
+      <li>
+        <a href="{{ '/about/' | relative_url }}">
+          <span class="icon">👤</span>
+          關於本站 - 了解點子實驗室的使命與願景
+        </a>
+      </li>
+      <li>
+        <a href="{{ '/categories/' | relative_url }}">
+          <span class="icon">📂</span>
+          文章分類 - 按主題瀏覽所有內容
+        </a>
+      </li>
+      <li>
+        <a href="{{ '/2025/01/15/ai-productivity-tools-2025/' | relative_url }}">
+          <span class="icon">🤖</span>
+          2025 年必知的 AI 生產力工具
+        </a>
+      </li>
+      <li>
+        <a href="{{ '/2025/06/15/gemini-grounding-vs-rag-interactive/' | relative_url }}">
+          <span class="icon">⚡</span>
+          互動式解析：Gemini Grounding 與 RAG
+        </a>
+      </li>
+      <li>
+        <a href="{{ '/2025/06/14/ai-harry-potter-avatar/' | relative_url }}">
+          <span class="icon">🎨</span>
+          AI 驅動的哈利波特風格頭像生成器
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function handleSearch(event) {
+  if (event.key === 'Enter') {
+    const query = event.target.value.trim();
+    if (query) {
+      // 使用 Google 站內搜尋
+      const searchUrl = `https://www.google.com/search?q=site:justin2061.github.io ${encodeURIComponent(query)}`;
+      window.open(searchUrl, '_blank');
+    }
+  }
+}
+
+// 自動聚焦搜尋框
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    searchInput.focus();
+  }
+});
+
+// 記錄 404 錯誤（如果有 Google Analytics）
+if (typeof gtag !== 'undefined') {
+  gtag('event', 'page_view', {
+    page_title: '404 Error',
+    page_location: window.location.href
+  });
+}
+</script> 
