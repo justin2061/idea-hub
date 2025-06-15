@@ -1,18 +1,43 @@
-title: 我的點子實驗室
-description: 每天一點靈感，探索 AI、創意、創業與未來工具。
+title: 點子實驗室 | Idea Hub
+description: 探索 AI、創意、創業與未來工具的專業內容平台。每天分享新穎觀點與深度思考。
 author: Justin Lee
 email: your@email.com
 baseurl: "" # GitHub Pages root 專案請留空
 url: "https://justin2061.github.io"
 
+# 使用更專業的主題
 theme: minima
+
+# 網站設定
+lang: zh-TW
+timezone: Asia/Taipei
+
+# 社交媒體連結
+social_links:
+  github: justin2061
+  # twitter: your_twitter
+  # linkedin: your_linkedin
+
+# 導航選單
+header_pages:
+  - about.md
+  - categories.md
+  - archive.md
 
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-paginate
+
+# 分頁設定
+paginate: 6
+paginate_path: "/page:num/"
 
 markdown: kramdown
+highlighter: rouge
 
+# 預設設定
 defaults:
   - scope:
       path: ""
@@ -20,5 +45,26 @@ defaults:
     values:
       layout: post
       author: Justin Lee
+      show_excerpts: true
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: page
 
-permalink: /:categories/:year/:month/:day/:title.html
+# SEO 設定
+google_analytics: # 你的 GA 追蹤碼
+google_site_verification: # Google Search Console 驗證碼
+
+# 文章設定
+show_excerpts: true
+excerpt_separator: <!--more-->
+
+permalink: /:categories/:year/:month/:day/:title/
+
+# 排除檔案
+exclude:
+  - README.md
+  - LICENSE
+  - Gemfile
+  - Gemfile.lock

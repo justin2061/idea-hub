@@ -1,0 +1,444 @@
+---
+layout: default
+title: Demo
+---
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式解析：Gemini Grounding 與 RAG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutrals (#F8F7F4, #2c3e50, #4A6A76) -->
+    <!-- Application Structure Plan: A single-page vertical narrative SPA designed to guide the user from a core problem (LLM Hallucination) to a general solution (RAG) and finally to a specific implementation (Gemini Grounding). The structure uses interactive sections (clickable examples, diagrams, tabs, dynamic charts) instead of a static layout to make complex technical concepts more engaging and digestible. This narrative flow was chosen over a dashboard because the goal is education and conceptual understanding, which benefits from a structured, story-like progression. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: LLM Hallucination -> Goal: Inform/Engage -> Viz: Interactive text block -> Interaction: Click-to-reveal -> Justification: More dynamic than static text. -> Library/Method: Vanilla JS toggle.
+        - Report Info: RAG Process -> Goal: Explain process -> Viz: HTML/CSS diagram -> Interaction: Click steps for info -> Justification: Active learning. -> Library/Method: HTML/CSS/JS.
+        - Report Info: RAG Benefits -> Goal: Compare -> Viz: Bar Chart -> Interaction: Hover tooltips -> Justification: Quick visual reinforcement. -> Library/Method: Chart.js.
+        - Report Info: Gemini Grounding Methods -> Goal: Organize -> Viz: Tabbed interface -> Interaction: Click tabs -> Justification: Neat categorization. -> Library/Method: Vanilla JS.
+        - Report Info: RAG vs. Grounding Synthesis -> Goal: Compare/Synthesize -> Viz: Interactive Polar Area Chart -> Interaction: Checkboxes to update datasets -> Justification: Data-driven summary. -> Library/Method: Chart.js.
+        -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #F8F7F4;
+            color: #2c3e50;
+        }
+        .accent-bg { background-color: #4A6A76; }
+        .accent-text { color: #4A6A76; }
+        .accent-border { border-color: #4A6A76; }
+        .secondary-bg { background-color: #e8e6e1; }
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            line-height: 1.2;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .section-subtitle {
+            font-size: 1.125rem;
+            text-align: center;
+            max-width: 48rem;
+            margin: 0 auto 3rem auto;
+            color: #5a6872;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        .tab-button.active {
+            border-bottom-color: #4A6A76;
+            color: #4A6A76;
+            font-weight: 600;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .interactive-diagram-step { cursor: pointer; }
+        .details-box {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, padding 0.5s ease-out;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        .details-box.open {
+            max-height: 500px; /* Adjust as needed */
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="text-center py-16 px-4">
+        <h1 class="text-4xl md:text-5xl font-bold accent-text mb-4">解開 AI 術語：Gemini Grounding 與 RAG</h1>
+        <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-600">深入了解大型語言模型如何變得更可靠，以及 Google 的「接地」功能與 RAG 技術之間的真實關係。</p>
+    </header>
+
+    <main class="container mx-auto px-4 pb-20">
+
+        <!-- Section 1: The Problem -->
+        <section id="problem" class="my-16 scroll-mt-20">
+            <h2 class="section-title">1. 問題的根源：AI 的「幻覺」是什麼？</h2>
+            <p class="section-subtitle">大型語言模型 (LLM) 非常強大，但有時會自信地「創造」事實。這種聽起來合理卻不準確的資訊，就是所謂的「幻覺」。</p>
+            <div class="card max-w-3xl mx-auto">
+                <div id="hallucination-example" class="p-4 border border-dashed rounded-lg secondary-bg">
+                    <p class="font-semibold text-gray-700">👤 使用者：台灣最高的瀑布是哪一個？它有多高？</p>
+                    <div id="ai-response" class="mt-2 text-gray-800">
+                        <p><span class="font-bold accent-text">🤖 AI 模型 (未接地):</span> 台灣最高的瀑布是「銀河洞瀑布」，高度大約有 250 公尺，非常壯觀。</p>
+                        <div id="hallucination-explanation" class="hidden mt-4 p-3 bg-red-100 text-red-800 rounded-lg border border-red-200">
+                            <p><span class="font-bold">⚠️ 這是幻覺！</span> 台灣最高的瀑布是「蛟龍瀑布」，總落差約 846 公尺。銀河洞瀑布雖然存在，但高度遠不及此，且並非最高。</p>
+                        </div>
+                    </div>
+                </div>
+                <button id="show-example-btn" class="w-full mt-4 accent-bg text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity">揭示真相</button>
+            </div>
+        </section>
+
+        <!-- Section 2: RAG -->
+        <section id="rag" class="my-24 scroll-mt-20">
+            <h2 class="section-title">2. 通用解法：認識 RAG 框架</h2>
+            <p class="section-subtitle">為了對抗幻覺，研究人員提出了「檢索增強生成」(RAG)。它的核心理念很簡單：在模型回答前，先讓它去查證相關的外部知識。</p>
+            
+            <div class="card max-w-4xl mx-auto">
+                <h3 class="text-xl font-bold text-center mb-6">RAG 的互動運作流程 (點擊步驟查看詳情)</h3>
+                <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 text-center">
+                    <div class="interactive-diagram-step flex-1" data-target="details-retrieval">
+                        <div class="w-24 h-24 mx-auto accent-bg rounded-full flex items-center justify-center text-white text-3xl font-bold">1</div>
+                        <p class="mt-2 font-semibold">檢索 (Retrieval)</p>
+                    </div>
+                    <div class="text-3xl accent-text font-light transform md:-rotate-0 rotate-90">&rarr;</div>
+                    <div class="interactive-diagram-step flex-1" data-target="details-augmentation">
+                        <div class="w-24 h-24 mx-auto accent-bg rounded-full flex items-center justify-center text-white text-3xl font-bold">2</div>
+                        <p class="mt-2 font-semibold">增強 (Augmentation)</p>
+                    </div>
+                    <div class="text-3xl accent-text font-light transform md:-rotate-0 rotate-90">&rarr;</div>
+                    <div class="interactive-diagram-step flex-1" data-target="details-generation">
+                         <div class="w-24 h-24 mx-auto accent-bg rounded-full flex items-center justify-center text-white text-3xl font-bold">3</div>
+                        <p class="mt-2 font-semibold">生成 (Generation)</p>
+                    </div>
+                </div>
+                <div id="details-retrieval" class="details-box mt-4 border-t pt-4">
+                    <h4 class="font-bold">檢索階段</h4>
+                    <p>收到使用者查詢後，系統會從外部知識庫（如文件、資料庫、網路）中，找出最相關的資訊片段。</p>
+                </div>
+                <div id="details-augmentation" class="details-box mt-4 border-t pt-4">
+                    <h4 class="font-bold">增強階段</h4>
+                    <p>將檢索到的資訊（上下文）與原始查詢結合，一起打包成一個更豐富的提示 (Prompt)。</p>
+                </div>
+                 <div id="details-generation" class="details-box mt-4 border-t pt-4">
+                    <h4 class="font-bold">生成階段</h4>
+                    <p>LLM 基於這個增強後的提示來生成最終的回應，確保答案有事實依據。</p>
+                </div>
+            </div>
+
+            <div class="mt-12">
+                <h3 class="text-xl font-bold text-center mb-6">RAG 帶來的優勢</h3>
+                <div class="chart-container">
+                    <canvas id="ragBenefitsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Gemini Grounding -->
+        <section id="grounding" class="my-24 scroll-mt-20">
+            <h2 class="section-title">3. Google 的實現：揭秘 Gemini Grounding</h2>
+            <p class="section-subtitle">「Gemini Grounding」是 Google 運用 RAG 原理的具體產品功能。它讓 Gemini 模型能與多種可靠的資訊來源連接，實現「接地」。</p>
+            
+            <div class="card max-w-4xl mx-auto">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button class="tab-button active" data-tab="search">🌐 Google 搜尋</button>
+                        <button class="tab-button" data-tab="data">📁 自有資料</button>
+                        <button class="tab-button" data-tab="maps">🗺️ Google 地圖</button>
+                    </nav>
+                </div>
+                <div class="py-6">
+                    <div id="tab-content-search" class="tab-content">
+                        <h3 class="font-bold text-lg mb-2 accent-text">透過 Google Search 接地</h3>
+                        <p class="text-gray-700">這是最直接的方式。Gemini 會自動執行 Google 搜尋，利用最新的網路資訊來回答問題。這為模型提供了廣泛的「世界知識」。</p>
+                        <p class="mt-3 font-semibold">應用場景：</p>
+                        <ul class="list-disc list-inside mt-1 text-gray-600">
+                            <li>回答時事問題（例如：最近的奧運在哪裡舉辦？）</li>
+                            <li>提供產品最新資訊與比較。</li>
+                        </ul>
+                    </div>
+                    <div id="tab-content-data" class="tab-content hidden">
+                        <h3 class="font-bold text-lg mb-2 accent-text">連接到你的自有資料</h3>
+                        <p class="text-gray-700">開發者可以將 Gemini 連接到企業內部的知識庫、網站內容或文件中。這確保了模型的回應與企業的專屬資訊保持一致。</p>
+                         <p class="mt-3 font-semibold">應用場景：</p>
+                        <ul class="list-disc list-inside mt-1 text-gray-600">
+                            <li>建立企業內部問答機器人（例如：公司的休假政策是什麼？）</li>
+                            <li>擔任客戶服務助手，回答特定產品問題。</li>
+                        </ul>
+                    </div>
+                    <div id="tab-content-maps" class="tab-content hidden">
+                        <h3 class="font-bold text-lg mb-2 accent-text">透過 Google Maps 接地</h3>
+                        <p class="text-gray-700">整合 Google 地圖豐富的地理空間數據，提供與地點、位置相關的精確回應。</p>
+                         <p class="mt-3 font-semibold">應用場景：</p>
+                        <ul class="list-disc list-inside mt-1 text-gray-600">
+                            <li>規劃旅遊行程。</li>
+                            <li>推薦附近符合特定條件的餐廳或景點。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Analogy and Comparison -->
+        <section id="comparison" class="my-24 scroll-mt-20">
+            <h2 class="section-title">4. 融會貫通：食譜 vs. 餐廳</h2>
+            <p class="section-subtitle">如果還是有點混淆，可以把 RAG 想像成一本「食譜」，而 Gemini Grounding 則是一間採用這本食譜的「高級餐廳」。</p>
+
+            <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
+                <div class="card text-center">
+                    <div class="text-5xl mb-4">📜</div>
+                    <h3 class="text-xl font-bold mb-2">RAG (通用食譜)</h3>
+                    <p class="text-gray-600">它是一個**通用原理**和**技術框架**，教導你如何透過準備食材（檢索）並結合烹飪技巧（生成）來製作佳餚。它放諸四海皆準，是背後的指導思想。</p>
+                </div>
+                <div class="card text-center">
+                    <div class="text-5xl mb-4">🧑‍🍳</div>
+                    <h3 class="text-xl font-bold mb-2">Gemini Grounding (高級餐廳)</h3>
+                    <p class="text-gray-600">它是 Google 對 RAG 原理的**具體實現**和**產品功能**。這家餐廳採用了 RAG 這本食譜，並為你提供了高品質的食材（Google Search、自有資料），為你烹製可靠的回應。</p>
+                </div>
+            </div>
+
+            <div class="mt-16">
+                 <h3 class="text-xl font-bold text-center mb-2">互動特性比較</h3>
+                 <p class="text-center text-gray-600 mb-6">勾選下方選項，查看兩者在不同維度上的特性。</p>
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+                <div class="flex justify-center space-x-6 mt-4">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="rag-checkbox" class="h-5 w-5 rounded accent-bg" checked>
+                        <span>RAG</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="grounding-checkbox" class="h-5 w-5 rounded accent-bg" checked>
+                        <span>Gemini Grounding</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="secondary-bg py-8 text-center text-gray-600">
+        <p>AI 的「接地」能力是其走向真正可靠和實用化的關鍵一步。</p>
+        <p class="text-sm mt-2">© 2025 Interactive Explainer</p>
+    </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Section 1: Hallucination Example
+    const showExampleBtn = document.getElementById('show-example-btn');
+    const hallucinationExplanation = document.getElementById('hallucination-explanation');
+    showExampleBtn.addEventListener('click', () => {
+        hallucinationExplanation.classList.toggle('hidden');
+        showExampleBtn.textContent = hallucinationExplanation.classList.contains('hidden') ? '揭示真相' : '隱藏真相';
+    });
+
+    // Section 2: Interactive Diagram
+    const diagramSteps = document.querySelectorAll('.interactive-diagram-step');
+    diagramSteps.forEach(step => {
+        step.addEventListener('click', () => {
+            const targetId = step.dataset.target;
+            const targetBox = document.getElementById(targetId);
+            
+            // Close other boxes
+            document.querySelectorAll('.details-box').forEach(box => {
+                if(box.id !== targetId) {
+                    box.classList.remove('open');
+                }
+            });
+
+            // Toggle current box
+            targetBox.classList.toggle('open');
+        });
+    });
+
+    // Section 2: RAG Benefits Chart
+    const ragCtx = document.getElementById('ragBenefitsChart').getContext('2d');
+    new Chart(ragCtx, {
+        type: 'bar',
+        data: {
+            labels: ['事實準確性', '資訊時效性', '答案可追溯性'],
+            datasets: [{
+                label: '未使用 RAG',
+                data: [40, 30, 20],
+                backgroundColor: 'rgba(200, 200, 200, 0.6)',
+                borderColor: 'rgba(200, 200, 200, 1)',
+                borderWidth: 1
+            }, {
+                label: '使用 RAG',
+                data: [90, 95, 85],
+                backgroundColor: 'rgba(74, 106, 118, 0.6)',
+                borderColor: 'rgba(74, 106, 118, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%'
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                     callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y + '%';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Section 3: Tabs
+    const tabs = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+
+            tabs.forEach(item => item.classList.remove('active'));
+            tab.classList.add('active');
+
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+                if (content.id === `tab-content-${tabName}`) {
+                    content.classList.remove('hidden');
+                }
+            });
+        });
+    });
+
+    // Section 4: Comparison Chart
+    const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+    const chartData = {
+        labels: ['通用性', '易用性', '資料源彈性', '整合程度', '成本效益'],
+        datasets: [
+            {
+                label: 'RAG (通用原理)',
+                data: [9, 4, 8, 3, 7],
+                fill: true,
+                backgroundColor: 'rgba(200, 200, 200, 0.4)',
+                borderColor: 'rgba(200, 200, 200, 1)',
+                pointBackgroundColor: 'rgba(200, 200, 200, 1)',
+            },
+            {
+                label: 'Gemini Grounding (產品功能)',
+                data: [5, 9, 6, 9, 6],
+                fill: true,
+                backgroundColor: 'rgba(74, 106, 118, 0.4)',
+                borderColor: 'rgba(74, 106, 118, 1)',
+                pointBackgroundColor: 'rgba(74, 106, 118, 1)',
+            }
+        ]
+    };
+    
+    let comparisonChart = new Chart(comparisonCtx, {
+        type: 'radar',
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            elements: {
+                line: {
+                    borderWidth: 2
+                }
+            },
+            scales: {
+                r: {
+                    angleLines: {
+                        display: true
+                    },
+                    suggestedMin: 0,
+                    suggestedMax: 10,
+                    pointLabels: {
+                        font: {
+                            size: 14
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.raw}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    const ragCheckbox = document.getElementById('rag-checkbox');
+    const groundingCheckbox = document.getElementById('grounding-checkbox');
+
+    function updateComparisonChart() {
+        const activeDatasets = [];
+        if (ragCheckbox.checked) {
+            activeDatasets.push(chartData.datasets[0]);
+        }
+        if (groundingCheckbox.checked) {
+            activeDatasets.push(chartData.datasets[1]);
+        }
+        comparisonChart.data.datasets = activeDatasets;
+        comparisonChart.update();
+    }
+
+    ragCheckbox.addEventListener('change', updateComparisonChart);
+    groundingCheckbox.addEventListener('change', updateComparisonChart);
+});
+</script>
+</body>
+</html>
