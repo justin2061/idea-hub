@@ -1,20 +1,21 @@
 ---
-layout: default # Assumes a 'default' layout from your theme (e.g., minima)
+layout: default
 title: Welcome
 ---
 
-# Welcome to My Idea Hub!
+# 👋 Welcome to My Idea Hub
 
-This is a place to capture and explore new ideas.
+這是一個收集與探索各種創意點子的網站。
 
-## Latest Ideas
+## 🧠 最新點子列表
 
 <ul>
   {% for post in site.posts %}
     <li>
-      <a href="{{ post.url | relative_url }}">{{ post.title }}</a> - {{ post.date | date: "%Y-%m-%d" }}
+      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+      <small>({{ post.date | date: "%Y-%m-%d" }})</small>
     </li>
   {% endfor %}
 </ul>
 
-Check out the [About page](about.html) to learn more.
+👉 查看[關於本站](about.html)了解更多。
