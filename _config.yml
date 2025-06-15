@@ -1,0 +1,24 @@
+title: 我的點子實驗室
+description: 每天一點靈感，探索 AI、創意、創業與未來工具。
+author: Justin Lee
+email: your@email.com
+baseurl: "" # GitHub Pages root 專案請留空
+url: "https://justin2061.github.io"
+
+theme: minima
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+markdown: kramdown
+
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: post
+      author: Justin Lee
+
+permalink: /:categories/:year/:month/:day/:title.html
