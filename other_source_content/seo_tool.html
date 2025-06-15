@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO 感知型 Markdown 發布助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* 自訂顏色變數 (雖 Tailwind 很好用，但為精確符合您的顏色，這裡定義) */
+        :root {
+            --color-primary: #2D9CDB;
+            --color-secondary: #27AE60;
+            --color-background: #F8F9FA;
+            --color-text: #2D3748;
+            --color-accent: #F6AD55;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+        }
+        .font-editor {
+            font-family: 'Source Code Pro', monospace;
+        }
+        /* 自訂 Tailwind 顏色 (如果需要更廣泛使用) */
+        /* 在 tailwind.config.js 中設定，但此處為靜態 HTML，故用 CSS 變數 */
+
+        /* 可折疊面板的箭頭樣式 (簡易) */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details > summary::before {
+            content: '▼';
+            font-size: 0.8em;
+            margin-right: 8px;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        details[open] > summary::before {
+            transform: rotate(-90deg);
+        }
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #1A7FAF; /* Primary darker */
+        }
+        .text-primary { color: var(--color-primary); }
+        .text-secondary { color: var(--color-secondary); }
+        .text-accent { color: var(--color-accent); }
+        .border-primary { border-color: var(--color-primary); }
+
+        /* 確保 textarea 和 preview 有最小高度且可滾動 */
+        .editor-textarea, .preview-area {
+            min-height: 400px; /* 或依據視窗高度調整，例如 calc(100vh - 200px) */
+            max-height: calc(100vh - 150px); /* 減去 header 和 padding 的高度 */
+            overflow-y: auto;
+        }
+         /* 響應式調整：堆疊佈局 */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .editor-column, .preview-column {
+                width: 100%;
+                max-height: none; /* 解除最大高度限制 */
+            }
+            .editor-textarea, .preview-area {
+                max-height: 50vh; /* 在行動裝置上限制高度 */
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3">
+            <h1 class="text-xl font-semibold" style="color: var(--color-primary);">SEO 感知型 Markdown 發布助手</h1>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-4 flex flex-col md:flex-row gap-4 main-container">
+
+        <section class="w-full md:w-1/2 bg-white shadow-lg rounded-lg p-4 flex flex-col editor-column">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-lg font-semibold">Markdown 編輯器</h2>
+                </div>
+            <textarea
+                class="font-editor w-full h-full flex-grow border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-opacity-50 editor-textarea"
+                style="border-color: var(--color-primary); outline-color: var(--color-primary);"
+                placeholder="在這裡開始撰寫您的 Markdown 內容...
+
+# 範例標題
+
+這是一些 **粗體** 和 *斜體* 文字。
+
+- 列表項目 1
+- 列表項目 2
+
+[這是一個連結](https://example.com)
+
+```python
+# 程式碼區塊範例
+def hello():
+    print('Hello, world!')
+```
+"
+            ></textarea>
+        </section>
+
+        <aside class="w-full md:w-1/2 space-y-4 overflow-y-auto preview-column" style="max-height: calc(100vh - 100px);">
+            <details class="bg-white shadow-lg rounded-lg p-0 overflow-hidden" open>
+                <summary class="p-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center">
+                    <h3 class="text-md font-semibold">即時預覽</h3>
+                </summary>
+                <div class="p-4 border-t border-gray-200 preview-area">
+                    <div class="prose max-w-none">
+                        <h1>範例標題</h1>
+                        <p>這是一些 <strong>粗體</strong> 和 <em>斜體</em> 文字。</p>
+                        <ul>
+                            <li>列表項目 1</li>
+                            <li>列表項目 2</li>
+                        </ul>
+                        <p><a href="https://example.com" style="color: var(--color-primary);">這是一個連結</a></p>
+                        <pre><code class="language-python"># 程式碼區塊範例
+def hello():
+    print('Hello, world!')
+</code></pre>
+                        <p class="mt-4 text-sm text-gray-500">（預覽內容會根據左側編輯器自動更新）</p>
+                    </div>
+                </div>
+            </details>
+
+            <details class="bg-white shadow-lg rounded-lg p-0 overflow-hidden" open>
+                <summary class="p-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center">
+                    <h3 class="text-md font-semibold">SEO 分析與建議</h3>
+                </summary>
+                <div class="p-4 border-t border-gray-200 space-y-3">
+                    <div class="flex items-center">
+                        <span class="w-5 h-5 rounded-full mr-2 flex items-center justify-center text-white text-xs" style="background-color: var(--color-secondary);">✓</span>
+                        <p class="text-sm">文章標題長度適中 (建議 50-60 字元)</p>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-5 h-5 rounded-full mr-2 flex items-center justify-center text-white text-xs" style="background-color: var(--color-accent);">!</span>
+                        <p class="text-sm">Meta 描述缺失 (建議 150-160 字元)</p>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-5 h-5 rounded-full mr-2 flex items-center justify-center text-white text-xs" style="background-color: var(--color-secondary);">✓</span>
+                        <p class="text-sm">圖片 Alt 文字皆已填寫</p>
+                    </div>
+                    <div class="flex items-center">
+                        <p class="text-sm ml-7"><strong style="color: var(--color-primary);">建議：</strong>為您的文章新增一個引人入勝的 Meta 描述。</p>
+                    </div>
+                    <div class="mt-2">
+                        <h4 class="text-sm font-semibold mb-1">可讀性分析:</h4>
+                        <p class="text-sm">分數: 75/100 (良好)</p>
+                    </div>
+                </div>
+            </details>
+
+            <details class="bg-white shadow-lg rounded-lg p-0 overflow-hidden">
+                <summary class="p-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center">
+                    <h3 class="text-md font-semibold">關鍵字優化</h3>
+                </summary>
+                <div class="p-4 border-t border-gray-200 space-y-2">
+                    <div>
+                        <label for="focusKeyword" class="text-sm font-medium">焦點關鍵字:</label>
+                        <input type="text" id="focusKeyword" class="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm font-editor focus:ring-2 focus:ring-opacity-50" style="border-color: var(--color-primary); outline-color: var(--color-primary);" placeholder="例如：Markdown 教學">
+                    </div>
+                    <p class="text-sm"><strong style="color: var(--color-primary);">建議：</strong></p>
+                    <ul class="list-disc list-inside text-sm pl-2 space-y-1">
+                        <li>將焦點關鍵字自然地融入文章標題中。</li>
+                        <li>在第一段提及焦點關鍵字。</li>
+                        <li>確保焦點關鍵字在副標題 (H2, H3) 中出現。</li>
+                    </ul>
+                </div>
+            </details>
+
+            <details class="bg-white shadow-lg rounded-lg p-0 overflow-hidden">
+                <summary class="p-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center">
+                    <h3 class="text-md font-semibold">Google 搜尋結果預覽</h3>
+                </summary>
+                <div class="p-4 border-t border-gray-200">
+                    <div class="border border-gray-200 rounded-md p-3 bg-white">
+                        <h4 class="text-blue-700 text-lg truncate hover:underline cursor-pointer" style="color: #1a0dab;">您的文章標題將顯示在這裡 - SEO 助手</h4>
+                        <p class="text-sm text-green-700" style="color: #006621;">https://yourwebsite.com/your-article-slug</p>
+                        <p class="text-sm text-gray-600 mt-1" style="color: #545454;">
+                            您的 Meta 描述將會顯示在這裡，這段文字對於吸引使用者點擊非常重要，請確保它簡潔且包含主要關鍵字...
+                        </p>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">（此為模擬預覽，實際呈現可能因 Google 演算法而異）</p>
+                </div>
+            </details>
+
+        </aside>
+    </main>
+
+    <footer class="text-center py-4 text-sm text-gray-600 border-t border-gray-200 mt-auto">
+        © 2025 SEO 感知型 Markdown 發布助手
+    </footer>
+
+</body>
+</html>
