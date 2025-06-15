@@ -5,9 +5,6 @@ email: your@email.com
 baseurl: "" # GitHub Pages root 專案請留空
 url: "https://justin2061.github.io"
 
-permalink: /:year/:month/:day/:title/
-
-
 # 使用更專業的主題
 theme: minima
 
@@ -63,7 +60,8 @@ google_site_verification: # Google Search Console 驗證碼
 show_excerpts: true
 excerpt_separator: <!--more-->
 
-permalink: /:categories/:year/:month/:day/:title/
+# permalink: /:categories/:year/:month/:day/:title/
+permalink: /:year/:month/:day/:title/
 
 # 排除檔案
 exclude:
