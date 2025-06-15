@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # 網站地圖位置
-Sitemap: https://justin2061.github.io/sitemap.xml
+Sitemap: https://justin2061.github.io/idea-hub/sitemap.xml
 
 # 不允許索引的路徑（如果有的話）
 # Disallow: /private/
