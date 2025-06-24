@@ -55,35 +55,35 @@ title: 首頁
 
 ## 📊 網站統計
 
-<div class="stats-section" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
-  <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: var(--shadow); text-align: center;">
-    <div style="font-size: 2rem; font-weight: bold; color: var(--secondary-color);">{{ site.posts.size }}</div>
-    <div style="color: #7f8c8d;">篇文章</div>
+<div class="stats-section">
+  <div class="stat-card">
+    <div>{{ site.posts.size }}</div>
+    <div>篇文章</div>
   </div>
   
-  <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: var(--shadow); text-align: center;">
-    <div style="font-size: 2rem; font-weight: bold; color: var(--success-color);">{{ site.categories.size }}</div>
-    <div style="color: #7f8c8d;">個分類</div>
+  <div class="stat-card">
+    <div>{{ site.categories.size }}</div>
+    <div>個分類</div>
   </div>
   
-  <div class="stat-card" style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: var(--shadow); text-align: center;">
-    <div style="font-size: 2rem; font-weight: bold; color: var(--accent-color);">2025</div>
-    <div style="color: #7f8c8d;">年創立</div>
+  <div class="stat-card">
+    <div>2025</div>
+    <div>年創立</div>
   </div>
 </div>
 
 ## 👋 關於作者
 
-<div class="author-section" style="background: white; padding: 2rem; border-radius: 15px; box-shadow: var(--shadow); margin: 2rem 0;">
+<div class="author-section">
   <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
     <div style="flex: 1; min-width: 300px;">
-      <h3 style="margin-top: 0; color: var(--primary-color);">Justin Lee</h3>
+      <h3 style="margin-top: 0;">Justin Lee</h3>
       <p>我是一個對 AI、創意與創業充滿熱情的探索者。在這個快速變化的時代，我致力於發現和分享那些能夠啟發思考、推動創新的想法與工具。</p>
       <p>這個網站是我記錄思考軌跡、分享學習心得的地方。希望這些內容能為你帶來新的視角與靈感。</p>
-      <a href="{{ '/about/' | relative_url }}" class="btn btn-primary">了解更多</a>
+      <a href="{{ '/about/' | relative_url }}" class="btn-primary">了解更多</a>
     </div>
     <div style="text-align: center;">
-      <div style="width: 120px; height: 120px; background: var(--gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; margin: 0 auto;">👨‍💻</div>
+      <div style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; margin: 0 auto; box-shadow: var(--glow-shadow);">👨‍💻</div>
     </div>
   </div>
 </div>
@@ -91,22 +91,22 @@ title: 首頁
 ## 🔗 快速導航
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0;">
-  <a href="{{ '/categories/' | relative_url }}" class="nav-card" style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: var(--shadow); text-decoration: none; color: inherit; transition: all 0.3s ease; display: block;">
-    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📂</div>
-    <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">文章分類</h4>
-    <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">按主題瀏覽所有文章</p>
+  <a href="{{ '/categories/' | relative_url }}" class="nav-card">
+    <div>📂</div>
+    <h4>文章分類</h4>
+    <p>按主題瀏覽所有文章</p>
   </a>
   
-  <a href="{{ '/archive/' | relative_url }}" class="nav-card" style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: var(--shadow); text-decoration: none; color: inherit; transition: all 0.3s ease; display: block;">
-    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📅</div>
-    <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">文章歸檔</h4>
-    <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">按時間順序查看文章</p>
+  <a href="{{ '/archive/' | relative_url }}" class="nav-card">
+    <div>📅</div>
+    <h4>文章歸檔</h4>
+    <p>按時間順序查看文章</p>
   </a>
   
-  <a href="{{ '/about/' | relative_url }}" class="nav-card" style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: var(--shadow); text-decoration: none; color: inherit; transition: all 0.3s ease; display: block;">
-    <div style="font-size: 2rem; margin-bottom: 0.5rem;">ℹ️</div>
-    <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">關於本站</h4>
-    <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">了解網站理念與作者</p>
+  <a href="{{ '/about/' | relative_url }}" class="nav-card">
+    <div>ℹ️</div>
+    <h4>關於本站</h4>
+    <p>了解網站理念與作者</p>
   </a>
 </div>
 

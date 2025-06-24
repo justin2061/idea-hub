@@ -69,3 +69,10 @@ exclude:
   - LICENSE
   - Gemfile
   - Gemfile.lock
+  - docker-compose.yml
+  - _config_dev.yml
+  - start.bat
+  - stop.bat
+  - logs.bat
+  - node_modules/
+  - vendor/

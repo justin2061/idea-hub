@@ -1,0 +1,3 @@
+@echo off
+echo 📋 查看Jekyll日誌...
+docker logs -f idea-hub-jekyll 

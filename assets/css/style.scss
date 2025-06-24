@@ -1,5 +1,8 @@
-// 專業內容網站樣式
-// 註：這個檔案現在被 assets/main.scss 導入
+---
+---
+
+// 矽谷科技風格樣式 - Silicon Valley Tech Style
+// Jekyll 將處理這個 SCSS 文件並編譯成 CSS
 
 // 顏色變數
 :root {
@@ -601,6 +604,684 @@ h2 {
       outline: none;
       border-color: var(--secondary-color);
       box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+  }
+}
+
+// 矽谷科技風格樣式
+// Silicon Valley Tech Style
+
+// 科技感顏色變數
+:root {
+  // 深色主題色彩
+  --primary-bg: #0a0a0f;
+  --secondary-bg: #1a1a2e;
+  --card-bg: rgba(30, 30, 60, 0.8);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  
+  // 科技藍色系
+  --tech-blue: #00d4ff;
+  --tech-purple: #6c5ce7;
+  --tech-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --neon-blue: #0099ff;
+  --neon-purple: #9933ff;
+  --neon-green: #00ff88;
+  
+  // 文字顏色
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-muted: rgba(255, 255, 255, 0.6);
+  
+  // 陰影效果
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glow-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  
+  // 邊框
+  --glass-border-radius: 16px;
+  --card-border-radius: 12px;
+}
+
+// 動畫關鍵幀
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes backgroundShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+// 全域樣式
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.7;
+  color: var(--text-primary);
+  background: var(--primary-bg);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  
+  // 科技感背景
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+  background-size: 800px 800px, 600px 600px, 400px 400px;
+  animation: backgroundShift 20s ease-in-out infinite;
+}
+
+// 平滑滾動
+html {
+  scroll-behavior: smooth;
+}
+
+// 標題樣式
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 2rem 0 1rem 0;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 3.5rem;
+  background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeInUp 0.8s ease-out;
+  text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+}
+
+h2 {
+  font-size: 2.5rem;
+  position: relative;
+  padding-bottom: 1rem;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--tech-blue), var(--tech-purple));
+    border-radius: 2px;
+    animation: glowPulse 2s infinite;
+  }
+}
+
+h3 {
+  font-size: 1.8rem;
+  color: var(--tech-blue);
+}
+
+// 導航列 - 玻璃擬態效果
+.site-header {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-top: none;
+  border-bottom: 2px solid var(--tech-blue);
+  box-shadow: var(--glass-shadow);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-bottom-color: var(--tech-purple);
+  }
+  
+  .site-title {
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: var(--text-primary) !important;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    
+    &:hover {
+      transform: scale(1.05);
+      filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+    }
+  }
+  
+  .site-nav {
+    .page-link {
+      color: var(--text-secondary);
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      margin: 0 0.2rem;
+      
+      &:hover {
+        color: var(--tech-blue);
+        text-decoration: none;
+        background: var(--glass-bg);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2);
+      }
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+        opacity: 0;
+        border-radius: 8px;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+      }
+      
+      &:hover::before {
+        opacity: 0.1;
+      }
+    }
+  }
+}
+
+// 主要內容區域
+.page-content {
+  padding: 3rem 0;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+// 英雄區域 - 科技感設計
+.hero-section {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-border-radius);
+  box-shadow: var(--glass-shadow);
+  padding: 4rem 2rem;
+  text-align: center;
+  margin-bottom: 4rem;
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 1s ease-out;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(153, 51, 255, 0.1));
+    z-index: -1;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      radial-gradient(circle, rgba(0, 212, 255, 0.1) 1px, transparent 1px),
+      radial-gradient(circle, rgba(153, 51, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px, 80px 80px;
+    background-position: 0 0, 25px 25px;
+    animation: float 6s ease-in-out infinite;
+    z-index: -1;
+  }
+  
+  h1 {
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    font-size: 4rem;
+    text-shadow: 0 0 40px rgba(0, 212, 255, 0.5);
+  }
+  
+  .hero-description {
+    font-size: 1.4rem;
+    color: var(--text-secondary);
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.8;
+  }
+}
+
+// 特色卡片 - 玻璃擬態效果
+.features-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin: 4rem 0;
+  
+  .feature-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--glass-border-radius);
+    padding: 2.5rem;
+    text-align: center;
+    transition: all 0.4s ease;
+    box-shadow: var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+    animation: slideInLeft 0.8s ease-out;
+    
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.4s; }
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--tech-blue), var(--tech-purple));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    &:hover {
+      transform: translateY(-10px);
+      box-shadow: var(--glow-shadow);
+      border-color: var(--tech-blue);
+      
+      &::before {
+        opacity: 1;
+      }
+    }
+    
+    .feature-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 1.5rem;
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    h3 {
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+    
+    p {
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+  }
+}
+
+// 文章卡片
+.post-list {
+  display: grid;
+  gap: 2rem;
+  margin: 3rem 0;
+  
+  .post-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--glass-border-radius);
+    padding: 2rem;
+    transition: all 0.4s ease;
+    box-shadow: var(--card-shadow);
+    animation: fadeInUp 0.8s ease-out;
+    
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--glow-shadow);
+      border-color: var(--tech-blue);
+    }
+    
+    .post-title {
+      margin: 0 0 1rem 0;
+      
+      a {
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 1.5rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, var(--text-primary), var(--tech-blue));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        
+        &:hover {
+          background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+      }
+    }
+    
+    .post-meta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      
+      span {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        padding: 0.3rem 0.8rem;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        font-weight: 500;
+      }
+      
+      .post-category {
+        background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+        color: white;
+        border: none;
+      }
+    }
+    
+    .post-excerpt {
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 1.5rem;
+    }
+    
+    .read-more {
+      display: inline-block;
+      padding: 0.8rem 1.5rem;
+      background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+      color: white;
+      text-decoration: none;
+      border-radius: 25px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 212, 255, 0.4);
+        background: linear-gradient(135deg, var(--tech-purple), var(--neon-green));
+      }
+    }
+  }
+}
+
+// 統計卡片
+.stats-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin: 3rem 0;
+  
+  .stat-card {
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--card-border-radius) !important;
+    padding: 2rem !important;
+    text-align: center !important;
+    box-shadow: var(--card-shadow) !important;
+    transition: all 0.4s ease;
+    animation: fadeInUp 0.8s ease-out;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--glow-shadow) !important;
+    }
+    
+    div:first-child {
+      font-size: 3rem !important;
+      font-weight: 800 !important;
+      background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple)) !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+    }
+    
+    div:last-child {
+      color: var(--text-secondary) !important;
+      font-weight: 600 !important;
+    }
+  }
+}
+
+// 作者區域
+.author-section {
+  background: var(--card-bg) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--glass-border-radius) !important;
+  padding: 3rem !important;
+  box-shadow: var(--card-shadow) !important;
+  margin: 3rem 0 !important;
+  animation: fadeInUp 0.8s ease-out;
+  
+  h3 {
+    color: var(--text-primary) !important;
+    background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  p {
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+  
+  .btn-primary {
+    display: inline-block;
+    padding: 0.8rem 2rem;
+    background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 212, 255, 0.4);
+    }
+  }
+}
+
+// 導航卡片
+.nav-card {
+  background: var(--card-bg) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--card-border-radius) !important;
+  padding: 2rem !important;
+  text-decoration: none !important;
+  color: inherit !important;
+  transition: all 0.4s ease !important;
+  display: block !important;
+  box-shadow: var(--card-shadow) !important;
+  
+  &:hover {
+    transform: translateY(-8px) !important;
+    box-shadow: var(--glow-shadow) !important;
+    border-color: var(--tech-blue) !important;
+  }
+  
+  div:first-child {
+    font-size: 2.5rem !important;
+    margin-bottom: 1rem !important;
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  h4 {
+    margin: 0 0 0.5rem 0 !important;
+    color: var(--text-primary) !important;
+    font-size: 1.3rem !important;
+  }
+  
+  p {
+    margin: 0 !important;
+    color: var(--text-secondary) !important;
+    font-size: 0.95rem !important;
+  }
+}
+
+// 響應式設計
+@media (max-width: 768px) {
+  .wrapper {
+    padding: 0 1rem;
+  }
+  
+  .hero-section {
+    padding: 2rem 1rem;
+    
+    h1 {
+      font-size: 2.5rem;
+    }
+    
+    .hero-description {
+      font-size: 1.1rem;
+    }
+  }
+  
+  .features-section {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    
+    .feature-card {
+      padding: 2rem;
+    }
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+  }
+  
+  h2 {
+    font-size: 2rem;
+  }
+}
+
+// 滾動條樣式
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--tech-purple), var(--neon-green));
+}
+
+// 選取文字樣式
+::selection {
+  background: rgba(0, 212, 255, 0.3);
+  color: var(--text-primary);
+}
+
+::-moz-selection {
+  background: rgba(0, 212, 255, 0.3);
+  color: var(--text-primary);
+}
+
+// 焦點樣式
+*:focus {
+  outline: 2px solid var(--tech-blue);
+  outline-offset: 2px;
+}
+
+// 載入動畫
+.page-content {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+// 頁腳樣式
+.site-footer {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 2rem 0;
+  margin-top: 4rem;
+  
+  .footer-heading {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+  
+  a {
+    color: var(--tech-blue);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      color: var(--tech-purple);
+      text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
     }
   }
 } 
