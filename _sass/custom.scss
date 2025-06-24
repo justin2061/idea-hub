@@ -1,0 +1,17 @@
+// 專業內容網站樣式
+
+// 顏色變數
+:root {
+  --primary-color: #2c3e50;
+  --secondary-color: #3498db;
+  --accent-color: #e74c3c;
+  --success-color: #27ae60;
+  --warning-color: #f39c12;
+  --text-color: #2c3e50;
+  --light-gray: #ecf0f1;
+  --border-color: #bdc3c7;
+  --shadow: 0 2px 10px rgba(0,0,0,0.1);
+  --shadow-hover: 0 8px 25px rgba(0,0,0,0.15);
+  --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-alt: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+} 

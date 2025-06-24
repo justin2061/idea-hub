@@ -1,18 +1,10 @@
 source "https://rubygems.org"
 
-# Jekyll 版本
-gem "jekyll", "~> 4.3.0"
+# 使用 GitHub Pages gem，這會自動包含正確的 Jekyll 版本
+gem "github-pages", "~> 232", group: :jekyll_plugins
 
-# 主題
-gem "minima", "~> 2.5"
-
-# Jekyll 插件
-group :jekyll_plugins do
-  gem "jekyll-feed", "~> 0.12"
-  gem "jekyll-seo-tag", "~> 2.8"
-  gem "jekyll-sitemap", "~> 1.4"
-  gem "jekyll-paginate", "~> 1.1"
-end
+# 本地開發用的額外 gems
+gem "webrick", "~> 1.8"
 
 # Windows 和 JRuby 不包含 zoneinfo 文件，所以將 tzinfo-data gem 打包
 platforms :mingw, :x64_mingw, :mswin, :jruby do
