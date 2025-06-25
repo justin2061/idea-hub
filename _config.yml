@@ -9,7 +9,7 @@ baseurl: "/idea-hub"
 
 # 使用 Remote Theme (避免本地安裝問題)
 remote_theme: mmistakes/minimal-mistakes
-minimal_mistakes_skin: "default"
+minimal_mistakes_skin: "default"  # 可選: "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
 
 # 網站設定
 locale: "zh-TW"
@@ -43,8 +43,10 @@ social:
   links:
     - "https://github.com/justin2061"
 
-# 搜尋 (關閉以簡化)
-search: false
+# 搜尋功能 (技術文章推薦開啟)
+search: true
+search_full_content: true
+search_provider: lunr
 
 # Jekyll 設定
 markdown: kramdown
@@ -53,7 +55,7 @@ lsi: false
 excerpt_separator: "\n\n"
 incremental: false
 
-# Markdown 處理
+# Markdown 處理 (技術文章優化)
 kramdown:
   input: GFM
   hard_wrap: false
@@ -63,9 +65,14 @@ kramdown:
   toc_levels: 1..6
   smart_quotes: lsquo,rsquo,ldquo,rdquo
   enable_coderay: false
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block:
+      line_numbers: true
+      start_line: 1
 
 # 分頁設定
-paginate: 5
+paginate: 8  # 技術文章適中的分頁數量
 paginate_path: /page:num/
 
 # 插件 (最小化)
@@ -76,6 +83,7 @@ plugins:
   - jekyll-include-cache
   - jekyll-paginate
   - jekyll-seo-tag
+  - jekyll-gist
 
 # Archives
 category_archive:
@@ -85,7 +93,7 @@ tag_archive:
   type: liquid
   path: /tags/
 
-# 預設設定
+# 預設設定 (技術文章優化)
 defaults:
   # _posts
   - scope:
@@ -99,6 +107,11 @@ defaults:
       share: true
       related: true
       show_date: true
+      sidebar:
+        nav: "docs"
+      toc: true  # 技術文章顯示目錄
+      toc_label: "文章目錄"
+      toc_icon: "file-text"
   # _pages
   - scope:
       path: "_pages"
@@ -118,5 +131,7 @@ exclude:
   - node_modules
   - package.json
   - docker-compose.yml
+  - docker-compose-preview.yml
   - _config_dev.yml
   - "*.bat"
+  - "本地編輯工作流程.md"
