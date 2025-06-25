@@ -7,9 +7,8 @@ description: "探索 AI、創意、創業與未來工具的專業內容平台。
 url: "https://justin2061.github.io"
 baseurl: "/idea-hub"
 
-# 使用 Remote Theme (避免本地安裝問題)
-remote_theme: mmistakes/minimal-mistakes
-minimal_mistakes_skin: "default"  # 可選: "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
+# 使用 Jekyll 預設主題
+# theme: minima
 
 # 網站設定
 locale: "zh-TW"
@@ -22,10 +21,17 @@ author:
   bio: "AI 探索者 • 創意思維實踐者 • 科技趨勢觀察家"
   location: "台灣"
   email: "madoka2024@email.com"
+  avatar: "/assets/images/bio-photo.jpg"  # 個人頭像
   links:
+    - label: "網站"
+      icon: "fas fa-fw fa-link"
+      url: "https://justin2061.github.io/idea-hub"
     - label: "GitHub"
       icon: "fab fa-fw fa-github"
       url: "https://github.com/justin2061"
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:madoka2024@email.com"
 
 # 站點設定
 masthead_title: "點子實驗室"
@@ -47,6 +53,19 @@ social:
 search: true
 search_full_content: true
 search_provider: lunr
+
+# 進階搜尋設定
+lunr:
+  search_within_pages: true
+
+# 程式碼區塊複製按鈕
+enable_copy_code_button: true
+
+# 網站 logo (放在 /assets/images/ 資料夾)
+# logo: "/assets/images/site-logo.png"
+
+# Open Graph 預設圖片
+# og_image: "/assets/images/site-logo.png"
 
 # Jekyll 設定
 markdown: kramdown
@@ -119,6 +138,16 @@ defaults:
     values:
       layout: single
       author_profile: true
+
+# 頁尾連結
+footer:
+  links:
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/justin2061"
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:madoka2024@email.com"
 
 # 排除檔案
 exclude:

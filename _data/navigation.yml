@@ -1,0 +1,11 @@
+main:
+  - title: "首頁"
+    url: /
+  - title: "文章分類"
+    url: /categories/
+  - title: "標籤"
+    url: /tags/
+  - title: "關於我"
+    url: /about/
+  - title: "搜尋"
+    url: /search/ 
