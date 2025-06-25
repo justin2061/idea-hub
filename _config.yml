@@ -1,139 +1,122 @@
 # 基本網站資訊
-title: 點子實驗室 | Idea Hub
-tagline: 探索 AI、創意、創業與未來工具的專業內容平台
-description: >-
-  探索 AI、創意、創業與未來工具的專業內容平台。每天分享新穎觀點與深度思考。
+title: "點子實驗室 | Idea Hub"
+name: "點子實驗室"
+description: "探索 AI、創意、創業與未來工具的專業內容平台。每天分享新穎觀點與深度思考。"
 
 # GitHub 相關設定
 url: "https://justin2061.github.io"
 baseurl: "/idea-hub"
 
-# 使用 Chirpy 主題
-theme: jekyll-theme-chirpy
+# 使用 Remote Theme (避免本地安裝問題)
+remote_theme: mmistakes/minimal-mistakes
+minimal_mistakes_skin: "default"
 
 # 網站設定
-lang: zh-TW
-timezone: Asia/Taipei
+locale: "zh-TW"
+title_separator: "-"
+subtitle: "探索 AI、創意、創業與未來工具的專業內容平台"
 
 # 作者資訊
-github:
-  username: justin2061
-
-social:
-  name: Justin Lee
-  email: madoka2024@email.com
+author:
+  name: "Justin Lee"
+  bio: "AI 探索者 • 創意思維實踐者 • 科技趨勢觀察家"
+  location: "台灣"
+  email: "madoka2024@email.com"
   links:
-    - https://github.com/justin2061
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/justin2061"
 
-google_site_verification: # Google Search Console 驗證碼
+# 站點設定
+masthead_title: "點子實驗室"
+breadcrumbs: true
+words_per_minute: 200
 
-# Chirpy 特定設定
-google_analytics:
-  id: # 你的 GA 追蹤碼
-
-# 主題模式 (light, dark, auto)
-theme_mode: auto
-
-# CDN 設定（可選，用於加速）
-cdn: # https://cdn.jsdelivr.net/npm/
-
-# 頭像設定
-avatar: /assets/images/avatar.jpg
-
-# TOC (目錄) 設定
-toc: true
-
-# 評論系統設定（可選）
+# 評論系統 (關閉)
 comments:
-  active: # disqus, utterances, giscus
-  # disqus:
-  #   shortname: # 你的 Disqus shortname
+  provider: false
 
-# 自建搜尋設定
-search:
-  provider: # algolia, google
+# SEO 相關
+social:
+  type: Organization
+  name: 點子實驗室
+  links:
+    - "https://github.com/justin2061"
 
-# 分析工具
-analytics:
-  google:
-    id: # 你的 GA 追蹤碼
-
-# PWA 設定
-pwa:
-  enabled: true
-  cache:
-    enabled: true
+# 搜尋 (關閉以簡化)
+search: false
 
 # Jekyll 設定
 markdown: kramdown
 highlighter: rouge
-syntax_highlighter_opts:
-  css_class: 'highlight'
+lsi: false
+excerpt_separator: "\n\n"
+incremental: false
+
+# Markdown 處理
+kramdown:
+  input: GFM
+  hard_wrap: false
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: as_char
+  toc_levels: 1..6
+  smart_quotes: lsquo,rsquo,ldquo,rdquo
+  enable_coderay: false
 
 # 分頁設定
-paginate: 10
+paginate: 5
+paginate_path: /page:num/
 
-# 插件
+# 插件 (最小化)
 plugins:
-  - jekyll-theme-chirpy
-  - jekyll-feed
+  - jekyll-remote-theme
   - jekyll-sitemap
+  - jekyll-feed
+  - jekyll-include-cache
   - jekyll-paginate
   - jekyll-seo-tag
-  - jekyll-include-cache
-  - jekyll-gist
-  - jemoji
+
+# Archives
+category_archive:
+  type: liquid
+  path: /categories/
+tag_archive:
+  type: liquid
+  path: /tags/
 
 # 預設設定
 defaults:
+  # _posts
   - scope:
       path: ""
       type: posts
     values:
-      layout: post
-      comments: true
-      toc: true
-      pin: false
-      math: false
-      mermaid: false
-  - scope:
-      path: _drafts
-    values:
+      layout: single
+      author_profile: true
+      read_time: true
       comments: false
+      share: true
+      related: true
+      show_date: true
+  # _pages
   - scope:
-      path: ""
-      type: tabs
+      path: "_pages"
+      type: pages
     values:
-      layout: page
-      permalink: /:title/
-
-# 文章設定
-excerpt_separator: <!--more-->
+      layout: single
+      author_profile: true
 
 # 排除檔案
 exclude:
-  - "*.gem"
-  - "*.gemspec"
-  - docs
-  - tools
-  - README.md
+  - vendor
+  - .bundle
+  - .jekyll-assets-cache
+  - .sass-cache
+  - Gemfile
   - LICENSE
-  - rollup.config.js
-  - package*.json
-  - "*.config.js"
+  - node_modules
+  - package.json
   - docker-compose.yml
   - _config_dev.yml
-  - start.bat
-  - stop.bat
-  - logs.bat
-  - node_modules/
-  - vendor/
-
-jekyll-archives:
-  enabled: [categories, tags]
-  layouts:
-    category: category
-    tag: tag
-  permalinks:
-    tag: /tags/:name/
-    category: /categories/:name/
+  - "*.bat"

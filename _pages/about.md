@@ -1,10 +1,7 @@
 ---
-layout: page
-icon: fas fa-info-circle
-order: 4
+permalink: /about/
+title: "關於點子實驗室"
 ---
-
-# 關於點子實驗室
 
 歡迎來到點子實驗室！這是一個專注於探索 AI、創意、創業與未來工具的專業內容平台。我們致力於分享新穎觀點與深度思考，與讀者一起探索科技未來的無限可能。
 
@@ -60,6 +57,4 @@ order: 4
 如果您對我們的內容有任何建議，或希望進行商業合作，歡迎透過以下方式聯絡：
 
 - **電子郵件**：[madoka2024@email.com](mailto:madoka2024@email.com)
-- **GitHub**：[@justin2061](https://github.com/justin2061)
-
-感謝您的支持與關注！ 
+- **GitHub**：[justin2061](https://github.com/justin2061) 
