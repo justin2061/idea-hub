@@ -1,0 +1,55 @@
+{{ define "main" }}
+    <div class="list-page">
+        <header style="margin-bottom: 40px;">
+            <h1>{{ .Title }}</h1>
+            {{ if .Content }}
+            <div class="page-content">
+                {{ .Content }}
+            </div>
+            {{ end }}
+        </header>
+        
+        {{ $pages := where .Site.RegularPages "Type" "posts" }}
+        {{ if $pages }}
+        
+        <div class="posts-list">
+            {{ range $pages.ByDate.Reverse }}
+            <article style="margin-bottom: 40px; padding-bottom: 30px; border-bottom: 1px solid #eee;">
+                <h2><a href="{{ .Permalink }}" style="text-decoration: none; color: #333;">{{ .Title }}</a></h2>
+                <div class="post-meta" style="margin-bottom: 15px;">
+                    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006年1月2日" }}</time>
+                    {{ if .Params.author }}
+                    <span>by {{ .Params.author }}</span>
+                    {{ end }}
+                    
+                    {{ if .Params.categories }}
+                    {{ range .Params.categories }}
+                    <span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-size: 0.8rem; margin-left: 10px;">{{ . }}</span>
+                    {{ end }}
+                    {{ end }}
+                </div>
+                
+                {{ if .Description }}
+                <p style="color: #666; margin-bottom: 15px;">{{ .Description }}</p>
+                {{ else }}
+                <p style="color: #666; margin-bottom: 15px;">{{ .Summary | truncate 200 }}</p>
+                {{ end }}
+                
+                <a href="{{ .Permalink }}" style="color: #007acc; text-decoration: none;">繼續閱讀 →</a>
+                
+                {{ if .Params.tags }}
+                <div style="margin-top: 15px;">
+                    {{ range .Params.tags }}
+                    <span style="background: #e8f4fd; color: #007acc; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; margin-right: 5px;">{{ . }}</span>
+                    {{ end }}
+                </div>
+                {{ end }}
+            </article>
+            {{ end }}
+        </div>
+        
+        {{ else }}
+        <p style="text-align: center; color: #666; margin: 40px 0;">目前還沒有文章。</p>
+        {{ end }}
+    </div>
+{{ end }} 
