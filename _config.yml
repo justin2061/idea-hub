@@ -1,74 +1,126 @@
+# 基本網站資訊
 title: 點子實驗室 | Idea Hub
-description: 探索 AI、創意、創業與未來工具的專業內容平台。每天分享新穎觀點與深度思考。
-author: Justin Lee
-email: madoka2024@email.com
-baseurl: "/idea-hub" # GitHub Pages 專案名稱
-url: "https://justin2061.github.io"
+tagline: 探索 AI、創意、創業與未來工具的專業內容平台
+description: >-
+  探索 AI、創意、創業與未來工具的專業內容平台。每天分享新穎觀點與深度思考。
 
-# 使用更專業的主題
-theme: minima
+# GitHub 相關設定
+url: "https://justin2061.github.io"
+baseurl: "/idea-hub"
+
+# 使用 Chirpy 主題
+theme: jekyll-theme-chirpy
 
 # 網站設定
 lang: zh-TW
 timezone: Asia/Taipei
 
-# 社交媒體連結
-social_links:
-  github: justin2061
-  # twitter: your_twitter
-  # linkedin: your_linkedin
+# 作者資訊
+github:
+  username: justin2061
 
-# 導航選單
-header_pages:
-  - about.md
-  - categories.md
-  - archive.md
+social:
+  name: Justin Lee
+  email: madoka2024@email.com
+  links:
+    - https://github.com/justin2061
 
-plugins:
-  - jekyll-feed
-  - jekyll-seo-tag
-  - jekyll-sitemap
-  - jekyll-paginate
+google_site_verification: # Google Search Console 驗證碼
 
-# 分頁設定
-paginate: 6
-paginate_path: "/page:num/"
+# Chirpy 特定設定
+google_analytics:
+  id: # 你的 GA 追蹤碼
 
+# 主題模式 (light, dark, auto)
+theme_mode: auto
+
+# CDN 設定（可選，用於加速）
+cdn: # https://cdn.jsdelivr.net/npm/
+
+# 頭像設定
+avatar: /assets/images/avatar.jpg
+
+# TOC (目錄) 設定
+toc: true
+
+# 評論系統設定（可選）
+comments:
+  active: # disqus, utterances, giscus
+  # disqus:
+  #   shortname: # 你的 Disqus shortname
+
+# 自建搜尋設定
+search:
+  provider: # algolia, google
+
+# 分析工具
+analytics:
+  google:
+    id: # 你的 GA 追蹤碼
+
+# PWA 設定
+pwa:
+  enabled: true
+  cache:
+    enabled: true
+
+# Jekyll 設定
 markdown: kramdown
 highlighter: rouge
+syntax_highlighter_opts:
+  css_class: 'highlight'
+
+# 分頁設定
+paginate: 10
+
+# 插件
+plugins:
+  - jekyll-theme-chirpy
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-paginate
+  - jekyll-seo-tag
+  - jekyll-include-cache
+  - jekyll-gist
+  - jemoji
 
 # 預設設定
 defaults:
   - scope:
       path: ""
-      type: "posts"
+      type: posts
     values:
       layout: post
-      author: Justin Lee
-      show_excerpts: true
+      comments: true
+      toc: true
+      pin: false
+      math: false
+      mermaid: false
+  - scope:
+      path: _drafts
+    values:
+      comments: false
   - scope:
       path: ""
-      type: "pages"
+      type: tabs
     values:
       layout: page
-
-# SEO 設定
-google_analytics: # 你的 GA 追蹤碼
-google_site_verification: # Google Search Console 驗證碼
+      permalink: /:title/
 
 # 文章設定
-show_excerpts: true
 excerpt_separator: <!--more-->
-
-# permalink: /:categories/:year/:month/:day/:title/
-permalink: /:year/:month/:day/:title/
 
 # 排除檔案
 exclude:
+  - "*.gem"
+  - "*.gemspec"
+  - docs
+  - tools
   - README.md
   - LICENSE
-  - Gemfile
-  - Gemfile.lock
+  - rollup.config.js
+  - package*.json
+  - "*.config.js"
   - docker-compose.yml
   - _config_dev.yml
   - start.bat
@@ -76,3 +128,12 @@ exclude:
   - logs.bat
   - node_modules/
   - vendor/
+
+jekyll-archives:
+  enabled: [categories, tags]
+  layouts:
+    category: category
+    tag: tag
+  permalinks:
+    tag: /tags/:name/
+    category: /categories/:name/

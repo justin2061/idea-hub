@@ -9,7 +9,7 @@ services:
       bash -c "
       bundle config set --local path '/usr/local/bundle' &&
       bundle install --jobs 4 --retry 3 &&
-      bundle exec jekyll serve --host 0.0.0.0 --config _config.yml,_config_dev.yml --livereload --force_polling --incremental
+      bundle exec jekyll serve --host 0.0.0.0 --config _config.yml,_config_dev.yml --livereload --force_polling --incremental --watch
       "
     ports:
       - "4000:4000"
