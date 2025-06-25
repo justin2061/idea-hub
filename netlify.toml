@@ -7,13 +7,10 @@
   HUGO_ENV = "production"
   HUGO_ENABLEGITINFO = "true"
 
-[[redirects]]
-  from = "/*"
-  to = "/404.html"
-  status = 404
+# Hugo 靜態網站不需要重定向規則
 
 [context.production.environment]
-  HUGO_BASEURL = "https://idea-hub.netlify.app"
+  HUGO_BASEURL = "https://idea-hubs.netlify.app"
 
 [context.deploy-preview]
   command = "hugo --gc --minify --buildFuture -b $DEPLOY_PRIME_URL"

@@ -1,4 +1,4 @@
-baseURL = 'https://justin2061.github.io/idea-hub'
+baseURL = 'https://idea-hubs.netlify.app'
 languageCode = 'zh-tw'
 title = '點子實驗室 | Idea Hub'
 theme = 'paper'
@@ -25,6 +25,10 @@ theme = 'paper'
     name = "關於"
     url = "/about/"
     weight = 30
+
+# URL 結構設定
+[permalinks]
+  posts = "/posts/:filename/"
 
 [markup]
   [markup.goldmark]
