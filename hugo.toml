@@ -1,0 +1,35 @@
+baseURL = 'https://justin2061.github.io/idea-hub'
+languageCode = 'zh-tw'
+title = '點子實驗室 | Idea Hub'
+theme = 'paper'
+
+[params]
+  description = "探索 AI、創意、創業與未來工具的專業內容平台。每天分享新穎觀點與深度思考。"
+  author = "Justin Lee"
+  
+  # 社群連結
+  [params.social]
+    github = "https://github.com/justin2061"
+    email = "madoka2024@email.com"
+
+[menu]
+  [[menu.main]]
+    name = "首頁"
+    url = "/"
+    weight = 10
+  [[menu.main]]
+    name = "文章"
+    url = "/posts/"
+    weight = 20
+  [[menu.main]]
+    name = "關於"
+    url = "/about/"
+    weight = 30
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+  [markup.highlight]
+    style = "github"
+    lineNos = true 
