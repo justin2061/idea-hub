@@ -131,7 +131,6 @@ exclude:
   - node_modules
   - package.json
   - docker-compose.yml
-  - docker-compose-preview.yml
-  - _config_dev.yml
   - "*.bat"
-  - "本地編輯工作流程.md"
+  - "preview-simple.html"
+  - "other_source_content"
