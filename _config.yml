@@ -79,6 +79,10 @@ lsi: false
 excerpt_separator: "\n\n"
 incremental: false
 
+# 包含特定目錄
+include:
+  - _pages
+
 # Markdown 處理
 kramdown:
   input: GFM
