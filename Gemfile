@@ -6,17 +6,15 @@ gem "jekyll", "~> 4.3"
 # 本地開發用
 gem "webrick", "~> 1.8"
 
-# Chirpy 主題所需插件
+# Jekyll 插件
 group :jekyll_plugins do
   gem "jekyll-remote-theme"
-  gem "jekyll-paginate"
-  gem "jekyll-redirect-from"
-  gem "jekyll-seo-tag"
-  gem "jekyll-archives"
   gem "jekyll-sitemap"
   gem "jekyll-feed"
   gem "jekyll-include-cache"
-  gem "jemoji"
+  gem "jekyll-paginate"
+  gem "jekyll-seo-tag"
+  gem "jekyll-gist"
 end
 
 # Windows 和 JRuby 支援

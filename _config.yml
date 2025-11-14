@@ -1,178 +1,190 @@
 # =============================
-# 網站基本設定
+# 網站基本資訊
 # =============================
-lang: zh-TW
-timezone: Asia/Taipei
-
-# =============================
-# Jekyll 配置
-# =============================
-title: 點子實驗室
-tagline: 探索 AI、創意、創業與未來工具的專業內容平台
-description: >-
-  探索 AI、創意、創業與未來工具的專業內容平台。每天分享新穎觀點與深度思考。
-
-# GitHub Pages 配置
+title: "點子實驗室 | Idea Hub"
+name: "點子實驗室"
+description: "探索 AI、創意、創業與未來工具的專業內容平台。每天分享新穎觀點與深度思考。"
 url: "https://justin2061.github.io"
 baseurl: "/idea-hub"
-
-github:
-  username: justin2061
+repository: "justin2061/idea-hub"
 
 # =============================
-# Chirpy 主題配置
+# 主題配置
 # =============================
-remote_theme: cotes2020/jekyll-theme-chirpy
-
-# 主題模式 (light, dark, 或留空讓用戶選擇)
-theme_mode: # [light | dark]
-
-# Avatar 頭像設定
-avatar: /assets/images/bio-photo.jpg
-
-# 社交媒體連結
-social:
-  name: Justin Lee
-  email: madoka2024@email.com
-  links:
-    - https://github.com/justin2061
-
-# 網站驗證 (Google Search Console, Bing, etc.)
-# google_site_verification:
-# bing_site_verification:
-
-# =============================
-# 網站分析
-# =============================
-# google_analytics:
-#   id: # Google Analytics ID
+remote_theme: mmistakes/minimal-mistakes@4.26.2
+minimal_mistakes_skin: "dark" # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
 
 # =============================
 # 網站設定
 # =============================
-# 頁面顯示設定
-toc: true  # 顯示文章目錄
-comments:
-  active: # giscus, disqus, utterances, etc.
-
-# 自我推廣
-# 在文章底部顯示作者資訊
-self_promotion: true
-
-# 分頁設定
-paginate: 10
-paginate_path: "/page:num/"
+locale: "zh-TW"
+title_separator: "-"
+subtitle: "探索 AI、創意、創業與未來工具的專業內容平台"
 
 # =============================
-# Jekyll 構建設定
+# 作者資訊
+# =============================
+author:
+  name: "Justin Lee"
+  bio: "AI 探索者 • 創意思維實踐者 • 科技趨勢觀察家"
+  location: "台灣"
+  email: "madoka2024@email.com"
+  avatar: "/assets/images/bio-photo.jpg"
+  links:
+    - label: "網站"
+      icon: "fas fa-fw fa-link"
+      url: "https://justin2061.github.io/idea-hub"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/justin2061"
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:madoka2024@email.com"
+
+# =============================
+# 站點功能設定
+# =============================
+masthead_title: "點子實驗室"
+breadcrumbs: true
+words_per_minute: 200
+
+# 評論系統 (關閉)
+comments:
+  provider: false
+
+# SEO 相關
+social:
+  type: Organization
+  name: 點子實驗室
+  links:
+    - "https://github.com/justin2061"
+
+# 搜尋功能
+search: true
+search_full_content: true
+search_provider: lunr
+
+lunr:
+  search_within_pages: true
+
+# 程式碼區塊複製按鈕
+enable_copy_code_button: true
+
+# =============================
+# Jekyll 設定
 # =============================
 markdown: kramdown
 highlighter: rouge
+lsi: false
+excerpt_separator: "\n\n"
+incremental: false
 
+# Markdown 處理
 kramdown:
+  input: GFM
+  hard_wrap: false
+  auto_ids: true
+  footnote_nr: 1
+  entity_output: as_char
+  toc_levels: 1..6
+  smart_quotes: lsquo,rsquo,ldquo,rdquo
+  enable_coderay: false
   syntax_highlighter: rouge
   syntax_highlighter_opts:
-    css_class: highlight
-    default_lang: console
-    span:
-      line_numbers: false
     block:
       line_numbers: true
       start_line: 1
 
 # =============================
-# 集合 (Collections)
+# 分頁設定
 # =============================
-collections:
-  tabs:
-    output: true
-    sort_by: order
+paginate: 8
+paginate_path: /page:num/
 
 # =============================
-# 預設值
+# 插件
+# =============================
+plugins:
+  - jekyll-remote-theme
+  - jekyll-sitemap
+  - jekyll-feed
+  - jekyll-include-cache
+  - jekyll-paginate
+  - jekyll-seo-tag
+  - jekyll-gist
+
+# =============================
+# Archives
+# =============================
+category_archive:
+  type: liquid
+  path: /categories/
+tag_archive:
+  type: liquid
+  path: /tags/
+
+# =============================
+# 預設設定
 # =============================
 defaults:
+  # _posts
   - scope:
       path: ""
       type: posts
     values:
-      layout: post
+      layout: single
+      author_profile: true
+      read_time: true
       comments: false
+      share: true
+      related: true
+      show_date: true
       toc: true
-      permalink: /posts/:title/
+      toc_label: "文章目錄"
+      toc_icon: "file-text"
+      toc_sticky: true
+  # _pages
   - scope:
-      path: _drafts
+      path: "_pages"
+      type: pages
     values:
-      comments: false
-  - scope:
-      path: ""
-      type: tabs
-    values:
-      layout: page
-      permalink: /:title/
+      layout: single
+      author_profile: true
 
 # =============================
-# Jekyll 插件
+# 頁尾連結
 # =============================
-plugins:
-  - jekyll-remote-theme
-  - jekyll-paginate
-  - jekyll-redirect-from
-  - jekyll-seo-tag
-  - jekyll-archives
-  - jekyll-sitemap
-  - jekyll-feed
-
-# =============================
-# Jekyll Archives
-# =============================
-jekyll-archives:
-  enabled: [categories, tags]
-  layouts:
-    category: category
-    tag: tag
-  permalinks:
-    tag: /tags/:name/
-    category: /categories/:name/
+footer:
+  links:
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/justin2061"
+    - label: "Email"
+      icon: "fas fa-fw fa-envelope-square"
+      url: "mailto:madoka2024@email.com"
 
 # =============================
 # 排除檔案
 # =============================
 exclude:
-  - "*.gem"
-  - "*.gemspec"
-  - docs
-  - tools
-  - README.md
-  - LICENSE
-  - "*.config.js"
-  - package*.json
   - vendor
   - .bundle
+  - .jekyll-assets-cache
   - .jekyll-cache
   - .sass-cache
   - Gemfile
   - Gemfile.lock
+  - LICENSE
   - node_modules
+  - package.json
   - docker-compose.yml
   - "*.bat"
   - "preview-simple.html"
   - "other_source_content"
-  - .github
-  - .gitignore
-  - .git
+  - README.md
+  - _tabs
 
 # =============================
-# SEO 設定
+# 其他設定
 # =============================
-sass:
-  style: compressed
-
-compress_html:
-  clippings: all
-  comments: all
-  endings: all
-  profile: false
-  blanklines: false
-  ignore:
-    envs: [development]
+timezone: Asia/Taipei

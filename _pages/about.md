@@ -1,14 +1,11 @@
 ---
-layout: page
-icon: fas fa-info-circle
-order: 4
+permalink: /about/
+title: "關於點子實驗室"
 ---
-
-## 關於點子實驗室
 
 歡迎來到**點子實驗室**！這是一個專注於探索 AI、創意、創業與未來工具的專業內容平台。
 
-### 我們的使命
+## 我們的使命
 
 在這個快速變化的時代，我們致力於：
 
@@ -17,7 +14,7 @@ order: 4
 - 🚀 **推動數位轉型**：幫助個人與企業掌握未來趨勢
 - 📚 **知識分享**：提供高品質的技術文章與深度分析
 
-### 關於作者
+## 關於作者
 
 **Justin Lee**
 
@@ -25,14 +22,14 @@ order: 4
 - 專注於 AI 工具研究與應用
 - 熱衷於分享新穎觀點與深度思考
 
-### 聯絡方式
+## 聯絡方式
 
 - 📧 Email: [madoka2024@email.com](mailto:madoka2024@email.com)
 - 🐙 GitHub: [@justin2061](https://github.com/justin2061)
 
-### 網站技術
+## 網站技術
 
-本站使用 Jekyll 靜態網站生成器搭配 Chirpy 主題構建，部署於 GitHub Pages。
+本站使用 Jekyll 靜態網站生成器搭配 Minimal Mistakes 主題構建，部署於 GitHub Pages。
 
 ---
 
