@@ -1,0 +1,24 @@
+# 測試依賴
+
+# HTML/Link 測試
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+lxml>=5.0.0
+
+# SEO 測試
+validators>=0.22.0
+
+# 性能測試
+requests>=2.31.0
+
+# 自動修復
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# 報告生成
+jinja2>=3.1.0
+markdown>=3.5.0
+
+# 測試框架
+pytest>=7.4.0
+pytest-html>=4.1.0
