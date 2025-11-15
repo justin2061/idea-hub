@@ -1,0 +1,353 @@
+name: 🤖 Fully Auto Generate & Publish
+
+on:
+  # 定期自動運行
+  schedule:
+    # 每週一、三、五早上 9:00 (台灣時間)
+    - cron: '0 1 * * 1,3,5'  # UTC 1:00 = 台灣 9:00
+
+  # 允許手動觸發
+  workflow_dispatch:
+    inputs:
+      categories:
+        description: '分類（用空格分隔，或 all）'
+        required: false
+        default: 'all'
+      count:
+        description: '每分類文章數'
+        required: false
+        default: '1'
+      skip_validation:
+        description: '跳過品質驗證（不建議）'
+        type: boolean
+        required: false
+        default: false
+
+env:
+  PYTHON_VERSION: '3.11'
+  MIN_WORDS: 1500  # 最少字數
+  MIN_QUALITY_SCORE: 7  # 最低品質分數 (0-10)
+
+jobs:
+  auto-generate-and-publish:
+    name: 🚀 Auto Generate & Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🔧 Configure Git
+        run: |
+          git config user.name "Auto Content Bot"
+          git config user.email "bot@github-actions"
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install anthropic requests pyyaml beautifulsoup4
+
+      - name: 📊 Get current stats
+        id: before_stats
+        run: |
+          BEFORE_COUNT=$(ls _posts/*.md 2>/dev/null | wc -l || echo "0")
+          echo "before_count=$BEFORE_COUNT" >> $GITHUB_OUTPUT
+
+      - name: 🤖 Generate articles
+        id: generate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+        run: |
+          echo "🤖 開始自動生成內容..."
+
+          # 設定參數
+          CATEGORIES="${{ github.event.inputs.categories || 'all' }}"
+          COUNT="${{ github.event.inputs.count || '1' }}"
+
+          echo "📋 配置："
+          echo "  - 分類: $CATEGORIES"
+          echo "  - 每分類: $COUNT 篇"
+          echo ""
+
+          # 運行生成器
+          cd _tools
+          python auto_content_generator.py \
+            --categories $CATEGORIES \
+            --count $COUNT \
+            2>&1 | tee ../generation.log
+
+          cd ..
+
+          # 計算生成的文章數
+          GENERATED_COUNT=$(ls -1 _posts/$(date +%Y-%m-%d)-*.md 2>/dev/null | wc -l || echo "0")
+          echo "generated_count=$GENERATED_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$GENERATED_COUNT" -eq 0 ]; then
+            echo "⚠️ 沒有生成任何文章"
+            exit 1
+          fi
+
+          echo "✅ 成功生成 $GENERATED_COUNT 篇文章"
+
+      - name: 🔍 Quality validation
+        id: validate
+        if: steps.generate.outputs.generated_count > 0 && github.event.inputs.skip_validation != 'true'
+        run: |
+          echo "🔍 品質驗證..."
+
+          FAILED=0
+          WARNINGS=0
+
+          for file in _posts/$(date +%Y-%m-%d)-*.md; do
+            if [ ! -f "$file" ]; then
+              continue
+            fi
+
+            BASENAME=$(basename "$file")
+            echo "📄 檢查: $BASENAME"
+
+            # 檢查 1: Front matter
+            if ! head -1 "$file" | grep -q "^---"; then
+              echo "  ❌ 缺少 front matter"
+              FAILED=$((FAILED + 1))
+              continue
+            fi
+
+            # 檢查 2: 必要欄位
+            if ! grep -q "^title:" "$file"; then
+              echo "  ❌ 缺少 title"
+              FAILED=$((FAILED + 1))
+              continue
+            fi
+
+            if ! grep -q "^date:" "$file"; then
+              echo "  ❌ 缺少 date"
+              FAILED=$((FAILED + 1))
+              continue
+            fi
+
+            # 檢查 3: 字數
+            WORDS=$(wc -w < "$file")
+            if [ "$WORDS" -lt "$MIN_WORDS" ]; then
+              echo "  ⚠️  字數不足: $WORDS < $MIN_WORDS"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            # 檢查 4: 內容結構
+            if ! grep -q "^##" "$file"; then
+              echo "  ⚠️  缺少章節標題"
+              WARNINGS=$((WARNINGS + 1))
+            fi
+
+            echo "  ✅ 驗證通過 ($WORDS 字)"
+          done
+
+          echo "validation_failed=$FAILED" >> $GITHUB_OUTPUT
+          echo "validation_warnings=$WARNINGS" >> $GITHUB_OUTPUT
+
+          if [ "$FAILED" -gt 0 ]; then
+            echo "❌ 有 $FAILED 篇文章驗證失敗"
+            exit 1
+          fi
+
+          if [ "$WARNINGS" -gt 0 ]; then
+            echo "⚠️  有 $WARNINGS 個警告，但繼續發布"
+          else
+            echo "✅ 所有文章驗證通過"
+          fi
+
+      - name: 📝 Generate article list
+        if: steps.generate.outputs.generated_count > 0
+        id: article_list
+        run: |
+          echo "## 📝 今日生成的文章" > article_list.md
+          echo "" >> article_list.md
+
+          for file in _posts/$(date +%Y-%m-%d)-*.md; do
+            if [ -f "$file" ]; then
+              TITLE=$(grep "^title:" "$file" | sed 's/title: *"\(.*\)"/\1/')
+              CATEGORY=$(grep "^categories:" -A 1 "$file" | tail -1 | sed 's/.*- //')
+              WORDS=$(wc -w < "$file")
+              echo "- **[$CATEGORY]** $TITLE ($WORDS 字)" >> article_list.md
+            fi
+          done
+
+          # 保存為 output
+          ARTICLE_LIST=$(cat article_list.md)
+          echo "articles<<EOF" >> $GITHUB_OUTPUT
+          echo "$ARTICLE_LIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Auto commit and push
+        if: steps.generate.outputs.generated_count > 0
+        id: commit
+        run: |
+          # 添加生成的文章
+          git add _posts/$(date +%Y-%m-%d)-*.md
+
+          # 生成 commit 訊息
+          COMMIT_MSG="🤖 自動生成 ${{ steps.generate.outputs.generated_count }} 篇文章
+
+📅 生成時間：$(date '+%Y-%m-%d %H:%M:%S')
+🏷️  分類：${{ github.event.inputs.categories || 'all' }}
+
+$(cat article_list.md)
+
+---
+由自動內容生成系統創建
+Run ID: ${{ github.run_id }}"
+
+          git commit -m "$COMMIT_MSG"
+
+          # 推送到當前分支
+          CURRENT_BRANCH=$(git branch --show-current)
+          echo "branch=$CURRENT_BRANCH" >> $GITHUB_OUTPUT
+
+          # 如果是 main/master 分支，直接推送
+          # 如果是其他分支，推送到該分支
+          git push origin $CURRENT_BRANCH
+
+          echo "✅ 成功推送到 $CURRENT_BRANCH"
+
+      - name: 📊 Generate statistics
+        if: steps.generate.outputs.generated_count > 0
+        id: stats
+        run: |
+          AFTER_COUNT=$(ls _posts/*.md 2>/dev/null | wc -l)
+          TOTAL_WORDS=0
+
+          for file in _posts/$(date +%Y-%m-%d)-*.md; do
+            if [ -f "$file" ]; then
+              WORDS=$(wc -w < "$file")
+              TOTAL_WORDS=$((TOTAL_WORDS + WORDS))
+            fi
+          done
+
+          AVG_WORDS=$((TOTAL_WORDS / ${{ steps.generate.outputs.generated_count }}))
+
+          echo "## 📊 統計資訊" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 📝 **本次生成**: ${{ steps.generate.outputs.generated_count }} 篇" >> $GITHUB_STEP_SUMMARY
+          echo "- 📚 **總文章數**: $AFTER_COUNT 篇" >> $GITHUB_STEP_SUMMARY
+          echo "- 📖 **總字數**: $(printf "%'d" $TOTAL_WORDS) 字" >> $GITHUB_STEP_SUMMARY
+          echo "- 📏 **平均字數**: $(printf "%'d" $AVG_WORDS) 字/篇" >> $GITHUB_STEP_SUMMARY
+          echo "- ⏰ **生成時間**: $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+          echo "- 🌿 **分支**: ${{ steps.commit.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.validate.outputs.validation_warnings }}" -gt 0 ]; then
+            echo "- ⚠️  **警告**: ${{ steps.validate.outputs.validation_warnings }} 個" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📋 Create daily report issue
+        if: steps.generate.outputs.generated_count > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const date = new Date().toISOString().split('T')[0];
+            const articleList = `${{ steps.article_list.outputs.articles }}`;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `📊 自動生成報告 - ${date}`,
+              body: `## 🤖 自動內容生成報告
+
+**生成時間**: ${new Date().toLocaleString('zh-TW')}
+**文章數量**: ${{ steps.generate.outputs.generated_count }} 篇
+
+${articleList}
+
+### 📊 詳細統計
+
+- **品質驗證**: ${{ steps.validate.outputs.validation_failed || 0 }} 個錯誤, ${{ steps.validate.outputs.validation_warnings || 0 }} 個警告
+- **分支**: ${{ steps.commit.outputs.branch }}
+- **Commit**: \`${context.sha.substring(0, 7)}\`
+- **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+### 🔗 快速連結
+
+- [查看所有文章](/${{ github.repository }}/tree/main/_posts)
+- [查看網站](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }})
+
+---
+*此報告由自動內容生成系統創建*
+`,
+              labels: ['auto-generated', 'daily-report']
+            });
+
+      - name: 💬 Slack notification
+        if: always() && env.SLACK_WEBHOOK != ''
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            COLOR="good"
+            EMOJI="✅"
+            MESSAGE="成功生成 ${{ steps.generate.outputs.generated_count }} 篇文章"
+          else
+            COLOR="danger"
+            EMOJI="❌"
+            MESSAGE="生成失敗，請查看日誌"
+          fi
+
+          curl -X POST $SLACK_WEBHOOK \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"attachments\": [{
+                \"color\": \"$COLOR\",
+                \"title\": \"$EMOJI 自動內容生成 - $STATUS\",
+                \"text\": \"$MESSAGE\",
+                \"fields\": [
+                  {\"title\": \"時間\", \"value\": \"$(date '+%Y-%m-%d %H:%M')\", \"short\": true},
+                  {\"title\": \"分支\", \"value\": \"${{ steps.commit.outputs.branch || 'N/A' }}\", \"short\": true}
+                ]
+              }]
+            }"
+
+      - name: 📊 Final summary
+        if: always()
+        run: |
+          echo "## 🎯 執行摘要" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.generate.outputs.generated_count }}" -gt 0 ]; then
+            echo "✅ **狀態**: 成功" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "${{ steps.article_list.outputs.articles }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🚀 **已自動發布到**: ${{ steps.commit.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
+            echo "🌐 **網站將在 2-5 分鐘後更新**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **狀態**: 失敗" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "💡 **建議**: 檢查 API Key 設定或查看詳細日誌" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🧹 Cleanup on failure
+        if: failure()
+        run: |
+          # 如果失敗，回滾未完成的更改
+          git reset --hard HEAD
+          echo "⚠️ 已回滾所有更改"
+
+  # 部署到 GitHub Pages（如果在 main 分支）
+  deploy-to-pages:
+    name: 🌐 Deploy to GitHub Pages
+    needs: auto-generate-and-publish
+    if: success() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    uses: ./.github/workflows/jekyll.yml
+    secrets: inherit
