@@ -260,33 +260,37 @@ jobs:
           script: |
             const date = new Date().toISOString().split('T')[0];
             const articleList = `${{ steps.article_list.outputs.articles }}`;
+            const generatedCount = '${{ steps.generate.outputs.generated_count }}';
+            const validationFailed = '${{ steps.validate.outputs.validation_failed || 0 }}';
+            const validationWarnings = '${{ steps.validate.outputs.validation_warnings || 0 }}';
+            const commitBranch = '${{ steps.commit.outputs.branch }}';
+            const runNumber = '${{ github.run_number }}';
+            const runId = '${{ github.run_id }}';
+            const repository = '${{ github.repository }}';
+            const repositoryOwner = '${{ github.repository_owner }}';
+            const repoName = '${{ github.event.repository.name }}';
+            const serverUrl = '${{ github.server_url }}';
+
+            const body = '## 🤖 自動內容生成報告\n\n' +
+              '**生成時間**: ' + new Date().toLocaleString('zh-TW') + '\n' +
+              '**文章數量**: ' + generatedCount + ' 篇\n\n' +
+              articleList + '\n\n' +
+              '### 📊 詳細統計\n\n' +
+              '- **品質驗證**: ' + validationFailed + ' 個錯誤, ' + validationWarnings + ' 個警告\n' +
+              '- **分支**: ' + commitBranch + '\n' +
+              '- **Commit**: `' + context.sha.substring(0, 7) + '`\n' +
+              '- **Workflow Run**: [#' + runNumber + '](' + serverUrl + '/' + repository + '/actions/runs/' + runId + ')\n\n' +
+              '### 🔗 快速連結\n\n' +
+              '- [查看所有文章](/' + repository + '/tree/main/_posts)\n' +
+              '- [查看網站](https://' + repositoryOwner + '.github.io/' + repoName + ')\n\n' +
+              '---\n' +
+              '*此報告由自動內容生成系統創建*';
 
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `📊 自動生成報告 - ${date}`,
-              body: `## 🤖 自動內容生成報告
-
-**生成時間**: ${new Date().toLocaleString('zh-TW')}
-**文章數量**: ${{ steps.generate.outputs.generated_count }} 篇
-
-${articleList}
-
-### 📊 詳細統計
-
-- **品質驗證**: ${{ steps.validate.outputs.validation_failed || 0 }} 個錯誤, ${{ steps.validate.outputs.validation_warnings || 0 }} 個警告
-- **分支**: ${{ steps.commit.outputs.branch }}
-- **Commit**: \`${context.sha.substring(0, 7)}\`
-- **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
-### 🔗 快速連結
-
-- [查看所有文章](/${{ github.repository }}/tree/main/_posts)
-- [查看網站](https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }})
-
----
-*此報告由自動內容生成系統創建*
-`,
+              title: '📊 自動生成報告 - ' + date,
+              body: body,
               labels: ['auto-generated', 'daily-report']
             });
 

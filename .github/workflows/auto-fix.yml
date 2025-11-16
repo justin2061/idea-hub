@@ -134,19 +134,18 @@ jobs:
                 '- **建議**: ' + issue.suggestion + '\n'
               ).join('\n');
 
+              const issueTitle = '⚠️ 發現 ' + unfixedIssues.length + ' 個需要人工處理的問題';
+              const issueBody = '## 🔍 問題報告\n\n' +
+                '以下問題無法自動修復，需要人工處理：\n\n' +
+                issuesList + '\n\n' +
+                '---\n' +
+                '*由自動化工作流生成於 ' + new Date().toISOString() + '*';
+
               await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: `⚠️ 發現 ${unfixedIssues.length} 個需要人工處理的問題`,
-                body: `## 🔍 問題報告
-
-以下問題無法自動修復，需要人工處理：
-
-${issuesList}
-
----
-*由自動化工作流生成於 ${new Date().toISOString()}*
-`,
+                title: issueTitle,
+                body: issueBody,
                 labels: ['bug', 'needs-review', 'automated']
               });
             }
