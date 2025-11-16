@@ -126,6 +126,14 @@ jobs:
             );
 
             if (unfixedIssues.length > 0) {
+              const issuesList = unfixedIssues.map((issue, i) =>
+                '### ' + (i + 1) + '. ' + issue.type + '\n\n' +
+                '- **檔案**: `' + issue.file + '`\n' +
+                '- **位置**: 第 ' + issue.line + ' 行\n' +
+                '- **描述**: ' + issue.description + '\n' +
+                '- **建議**: ' + issue.suggestion + '\n'
+              ).join('\n');
+
               await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -134,14 +142,7 @@ jobs:
 
 以下問題無法自動修復，需要人工處理：
 
-${unfixedIssues.map((issue, i) => `
-### ${i + 1}. ${issue.type}
-
-- **檔案**: \`${issue.file}\`
-- **位置**: 第 ${issue.line} 行
-- **描述**: ${issue.description}
-- **建議**: ${issue.suggestion}
-`).join('\n')}
+${issuesList}
 
 ---
 *由自動化工作流生成於 ${new Date().toISOString()}*

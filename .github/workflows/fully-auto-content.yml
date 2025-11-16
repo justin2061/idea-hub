@@ -199,18 +199,20 @@ jobs:
           git add _posts/$(date +%Y-%m-%d)-*.md
 
           # 生成 commit 訊息
-          COMMIT_MSG="🤖 自動生成 ${{ steps.generate.outputs.generated_count }} 篇文章
+          cat > commit_message.txt <<EOF
+          🤖 自動生成 ${{ steps.generate.outputs.generated_count }} 篇文章
 
-📅 生成時間：$(date '+%Y-%m-%d %H:%M:%S')
-🏷️  分類：${{ github.event.inputs.categories || 'all' }}
+          📅 生成時間：$(date '+%Y-%m-%d %H:%M:%S')
+          🏷️  分類：${{ github.event.inputs.categories || 'all' }}
 
-$(cat article_list.md)
+          $(cat article_list.md)
 
----
-由自動內容生成系統創建
-Run ID: ${{ github.run_id }}"
+          ---
+          由自動內容生成系統創建
+          Run ID: ${{ github.run_id }}
+          EOF
 
-          git commit -m "$COMMIT_MSG"
+          git commit -F commit_message.txt
 
           # 推送到當前分支
           CURRENT_BRANCH=$(git branch --show-current)
