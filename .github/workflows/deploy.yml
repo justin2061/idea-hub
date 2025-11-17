@@ -103,12 +103,17 @@ jobs:
           path: _site/
           retention-days: 7
 
-  # Job 2: 部署到 VM
+  # Job 2: 部署到 VM（可選）
   deploy:
     name: 🚀 Deploy to VM
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    # 只有在配置了 VM secrets 且推送到 main 時才執行
+    if: |
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+      secrets.VM_SSH_KEY != '' &&
+      secrets.VM_HOST != ''
 
     steps:
       - name: 📥 Checkout code
@@ -184,11 +189,12 @@ jobs:
           echo "- **Deploy time**: $(date)" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
 
-  # Job 3: 部署後測試
+  # Job 3: 部署後測試（僅當 VM 部署成功時）
   post-deployment-test:
     name: 🧪 Post-Deployment Tests
     needs: deploy
     runs-on: ubuntu-latest
+    if: success() && needs.deploy.result == 'success'
 
     steps:
       - name: 📥 Checkout code
@@ -214,11 +220,12 @@ jobs:
           name: performance-report
           path: lighthouse-report.json
 
-  # Job 4: 通知
+  # Job 4: 通知（可選）
   notify:
     name: 📢 Notify
     needs: [build-and-test, deploy, post-deployment-test]
     runs-on: ubuntu-latest
+    # 總是執行，但只在有需要時才發送通知
     if: always()
 
     steps:
@@ -227,11 +234,17 @@ jobs:
           echo "## 📊 Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Build**: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Deploy**: ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tests**: ${{ needs.post-deployment-test.result }}" >> $GITHUB_STEP_SUMMARY
+
+          # 只有在 VM 部署有執行時才顯示
+          if [ "${{ needs.deploy.result }}" != "skipped" ]; then
+            echo "- **Deploy**: ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Tests**: ${{ needs.post-deployment-test.result }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Deploy**: Skipped (VM not configured)" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: 💬 Slack notification
-        if: env.SLACK_WEBHOOK != ''
+        if: env.SLACK_WEBHOOK != '' && needs.deploy.result != 'skipped'
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: |
@@ -239,9 +252,11 @@ jobs:
           if [ "$STATUS" = "success" ]; then
             COLOR="good"
             EMOJI="✅"
+            MESSAGE="Deployment successful"
           else
             COLOR="danger"
             EMOJI="❌"
+            MESSAGE="Deployment failed"
           fi
 
           curl -X POST $SLACK_WEBHOOK \
@@ -249,7 +264,7 @@ jobs:
             -d "{
               \"attachments\": [{
                 \"color\": \"$COLOR\",
-                \"title\": \"$EMOJI Deployment $STATUS\",
+                \"title\": \"$EMOJI $MESSAGE\",
                 \"text\": \"Commit: ${{ github.sha }}\nBy: ${{ github.actor }}\"
               }]
             }"
