@@ -9,6 +9,9 @@ on:
 # 允許手動觸發工作流程
   workflow_dispatch:
 
+# 允許作為可重用工作流程被其他工作流程調用
+  workflow_call:
+
 # 設定權限以允許部署到 GitHub Pages
 permissions:
   contents: read
