@@ -1,0 +1,208 @@
+name: 🔧 Auto Fix Issues
+
+on:
+  schedule:
+    # 每天凌晨 2 點運行
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # 允許手動觸發
+  workflow_run:
+    workflows: ["🚀 Build, Test & Deploy"]
+    types:
+      - completed
+
+jobs:
+  detect-and-fix:
+    name: 🔍 Detect & Fix Issues
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' || github.event_name != 'workflow_run' }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+          bundler-cache: true
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: |
+          bundle install
+          pip install -r _tests/requirements.txt
+
+      - name: 🔨 Build site
+        run: |
+          bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+
+      - name: 🔍 Scan for issues
+        id: scan
+        run: |
+          python _tests/auto_fixer.py scan > scan_report.json
+          cat scan_report.json
+
+          # 檢查是否有問題
+          ISSUES_COUNT=$(jq '.total_issues' scan_report.json)
+          echo "issues_count=$ISSUES_COUNT" >> $GITHUB_OUTPUT
+
+      - name: 🔧 Auto fix issues
+        if: steps.scan.outputs.issues_count > 0
+        id: fix
+        run: |
+          python _tests/auto_fixer.py fix > fix_report.json
+          cat fix_report.json
+
+          FIXED_COUNT=$(jq '.fixed_count' fix_report.json)
+          echo "fixed_count=$FIXED_COUNT" >> $GITHUB_OUTPUT
+
+      - name: ✅ Verify fixes
+        if: steps.fix.outputs.fixed_count > 0
+        run: |
+          bundle exec jekyll build
+          python _tests/test_runner.py
+
+      - name: 📝 Create PR with fixes
+        if: steps.fix.outputs.fixed_count > 0
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            🔧 自動修復：${{ steps.fix.outputs.fixed_count }} 個問題
+
+            由 Auto Fix 工作流自動生成
+          branch: auto-fix/issues-${{ github.run_number }}
+          delete-branch: true
+          title: '🔧 自動修復：${{ steps.fix.outputs.fixed_count }} 個問題'
+          body: |
+            ## 🤖 自動修復報告
+
+            此 PR 由自動化工作流生成，修復了以下問題：
+
+            ### 📊 修復統計
+
+            ```json
+            ${{ steps.fix.outputs.fix_report }}
+            ```
+
+            ### ✅ 已修復的問題
+
+            - 死連結修復
+            - 圖片路徑修正
+            - Markdown 格式化
+            - SEO 優化
+
+            ### 🔍 驗證結果
+
+            所有修復已通過自動化測試驗證。
+
+            ---
+            *此 PR 由 GitHub Actions 自動創建*
+          labels: |
+            auto-fix
+            automated
+          reviewers: ${{ github.actor }}
+
+      - name: 📊 Create issue for unfixable problems
+        if: steps.scan.outputs.issues_count > steps.fix.outputs.fixed_count
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const scanReport = JSON.parse(fs.readFileSync('scan_report.json', 'utf8'));
+            const fixReport = JSON.parse(fs.readFileSync('fix_report.json', 'utf8'));
+
+            const unfixedIssues = scanReport.issues.filter(issue =>
+              !fixReport.fixed_issues.some(fixed => fixed.id === issue.id)
+            );
+
+            if (unfixedIssues.length > 0) {
+              const issuesList = unfixedIssues.map((issue, i) =>
+                '### ' + (i + 1) + '. ' + issue.type + '\n\n' +
+                '- **檔案**: `' + issue.file + '`\n' +
+                '- **位置**: 第 ' + issue.line + ' 行\n' +
+                '- **描述**: ' + issue.description + '\n' +
+                '- **建議**: ' + issue.suggestion + '\n'
+              ).join('\n');
+
+              const issueTitle = '⚠️ 發現 ' + unfixedIssues.length + ' 個需要人工處理的問題';
+              const issueBody = '## 🔍 問題報告\n\n' +
+                '以下問題無法自動修復，需要人工處理：\n\n' +
+                issuesList + '\n\n' +
+                '---\n' +
+                '*由自動化工作流生成於 ' + new Date().toISOString() + '*';
+
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: issueBody,
+                labels: ['bug', 'needs-review', 'automated']
+              });
+            }
+
+      - name: 📊 Summary
+        if: always()
+        run: |
+          echo "## 🔧 Auto Fix Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total issues found**: ${{ steps.scan.outputs.issues_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Auto-fixed**: ${{ steps.fix.outputs.fixed_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Requires manual fix**: $((${{ steps.scan.outputs.issues_count }} - ${{ steps.fix.outputs.fixed_count }}))" >> $GITHUB_STEP_SUMMARY
+
+  performance-optimization:
+    name: ⚡ Performance Optimization
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🖼️ Optimize images
+        run: |
+          # 安裝圖片優化工具
+          sudo apt-get update
+          sudo apt-get install -y optipng jpegoptim
+
+          # 優化圖片
+          find assets/images -name "*.png" -exec optipng -o2 {} \;
+          find assets/images -name "*.jpg" -exec jpegoptim --max=85 {} \;
+
+      - name: 📦 Check for large files
+        run: |
+          # 檢查大文件（> 1MB）
+          find . -type f -size +1M -not -path "./.git/*" > large_files.txt
+
+          if [ -s large_files.txt ]; then
+            echo "⚠️ 發現大文件：" >> $GITHUB_STEP_SUMMARY
+            cat large_files.txt >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📝 Create optimization PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: '⚡ 自動優化：圖片壓縮和性能改進'
+          branch: auto-optimize/performance-${{ github.run_number }}
+          title: '⚡ 性能優化：圖片壓縮'
+          body: |
+            ## ⚡ 性能優化報告
+
+            此 PR 包含以下優化：
+
+            - 🖼️ 圖片壓縮（PNG, JPG）
+            - 📦 大文件檢測和建議
+
+            ---
+            *自動生成*
+          labels: |
+            performance
+            automated

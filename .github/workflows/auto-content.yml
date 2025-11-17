@@ -1,0 +1,232 @@
+name: 🤖 Auto Generate Content
+
+on:
+  # 定期運行（每週一早上 9 點）
+  schedule:
+    - cron: '0 1 * * 1'  # UTC 時間週一 1:00 = 台灣時間 9:00
+
+  # 允許手動觸發
+  workflow_dispatch:
+    inputs:
+      categories:
+        description: '要生成的分類（用空格分隔，或輸入 all）'
+        required: false
+        default: 'all'
+      count:
+        description: '每個分類生成幾篇文章'
+        required: false
+        default: '1'
+      auto_publish:
+        description: '是否自動發布到 main 分支'
+        type: boolean
+        required: false
+        default: true
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  generate-content:
+    name: 📝 Generate Articles
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install anthropic requests pyyaml beautifulsoup4
+
+      - name: 🔍 Search trending topics
+        id: search
+        run: |
+          echo "🔍 搜尋各分類的熱門話題..."
+          python _tools/auto_content_generator.py \
+            --categories ${{ github.event.inputs.categories || 'all' }} \
+            --count 0  # 只搜尋不生成，用於預覽
+        continue-on-error: true
+
+      - name: 🤖 Generate articles with AI
+        id: generate
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+        run: |
+          echo "🤖 使用 AI 生成文章..."
+
+          # 設定參數
+          CATEGORIES="${{ github.event.inputs.categories || 'all' }}"
+          COUNT="${{ github.event.inputs.count || '1' }}"
+
+          # 運行生成器
+          python _tools/auto_content_generator.py \
+            --categories $CATEGORIES \
+            --count $COUNT
+
+          # 計算生成的文章數
+          GENERATED_COUNT=$(ls -1 _posts/$(date +%Y-%m-%d)-*.md 2>/dev/null | wc -l || echo "0")
+          echo "generated_count=$GENERATED_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$GENERATED_COUNT" -eq 0 ]; then
+            echo "⚠️ 沒有生成任何文章"
+            exit 1
+          fi
+
+          echo "✅ 成功生成 $GENERATED_COUNT 篇文章"
+
+      - name: 📋 List generated articles
+        if: steps.generate.outputs.generated_count > 0
+        run: |
+          echo "## 📝 生成的文章" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          for file in _posts/$(date +%Y-%m-%d)-*.md; do
+            if [ -f "$file" ]; then
+              TITLE=$(grep "^title:" "$file" | sed 's/title: *"\(.*\)"/\1/')
+              CATEGORY=$(grep "^categories:" -A 1 "$file" | tail -1 | sed 's/.*- //')
+              echo "- **[$CATEGORY]** $TITLE" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+      - name: ✅ Validate articles
+        if: steps.generate.outputs.generated_count > 0
+        run: |
+          echo "🔍 驗證文章格式..."
+
+          for file in _posts/$(date +%Y-%m-%d)-*.md; do
+            if [ -f "$file" ]; then
+              # 檢查 front matter
+              if ! head -1 "$file" | grep -q "^---"; then
+                echo "❌ $file 缺少 front matter"
+                exit 1
+              fi
+
+              # 檢查必要欄位
+              if ! grep -q "^title:" "$file"; then
+                echo "❌ $file 缺少 title"
+                exit 1
+              fi
+
+              if ! grep -q "^date:" "$file"; then
+                echo "❌ $file 缺少 date"
+                exit 1
+              fi
+
+              echo "✅ $(basename $file) 格式正確"
+            fi
+          done
+
+      - name: 📊 Generate statistics
+        if: steps.generate.outputs.generated_count > 0
+        run: |
+          echo "## 📊 統計資訊" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          TOTAL_WORDS=0
+
+          for file in _posts/$(date +%Y-%m-%d)-*.md; do
+            if [ -f "$file" ]; then
+              WORDS=$(wc -w < "$file")
+              TOTAL_WORDS=$((TOTAL_WORDS + WORDS))
+            fi
+          done
+
+          echo "- **文章數量**: ${{ steps.generate.outputs.generated_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **總字數**: $TOTAL_WORDS" >> $GITHUB_STEP_SUMMARY
+          echo "- **平均字數**: $((TOTAL_WORDS / ${{ steps.generate.outputs.generated_count }}))" >> $GITHUB_STEP_SUMMARY
+          echo "- **生成時間**: $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📝 Create Pull Request
+        if: steps.generate.outputs.generated_count > 0 && github.event.inputs.auto_publish != 'false'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            🤖 自動生成 ${{ steps.generate.outputs.generated_count }} 篇文章
+
+            分類：${{ github.event.inputs.categories || 'all' }}
+            生成時間：${{ steps.date.outputs.date }}
+
+            由自動內容生成系統創建
+          branch: auto-content/${{ github.run_number }}
+          delete-branch: true
+          title: '🤖 自動生成內容：${{ steps.generate.outputs.generated_count }} 篇新文章'
+          body: |
+            ## 🤖 自動生成的內容
+
+            此 PR 由自動內容生成系統創建，包含 ${{ steps.generate.outputs.generated_count }} 篇新文章。
+
+            ### 📝 生成的文章
+
+            ${{ steps.list.outputs.articles }}
+
+            ### ⚙️ 生成配置
+
+            - **分類**: ${{ github.event.inputs.categories || 'all' }}
+            - **每分類文章數**: ${{ github.event.inputs.count || '1' }}
+            - **生成時間**: ${{ steps.date.outputs.date }}
+
+            ### ✅ 驗證狀態
+
+            - [x] Front matter 完整
+            - [x] 必要欄位存在
+            - [x] 文章格式正確
+
+            ### 🔍 審查建議
+
+            1. 檢查文章內容質量
+            2. 驗證事實準確性
+            3. 確認語氣和風格
+            4. 檢查連結有效性
+
+            ---
+            *此 PR 由 GitHub Actions 自動創建*
+          labels: |
+            auto-generated
+            content
+            needs-review
+          reviewers: ${{ github.actor }}
+
+      - name: 📊 Summary
+        if: always()
+        run: |
+          echo "## 🎯 執行摘要" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.generate.outputs.generated_count }}" -gt 0 ]; then
+            echo "✅ **狀態**: 成功" >> $GITHUB_STEP_SUMMARY
+            echo "📝 **生成**: ${{ steps.generate.outputs.generated_count }} 篇文章" >> $GITHUB_STEP_SUMMARY
+
+            if [ "${{ github.event.inputs.auto_publish }}" != "false" ]; then
+              echo "📤 **操作**: 已創建 Pull Request" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "📤 **操作**: 文章已保存，等待手動發布" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⚠️ **狀態**: 沒有生成文章" >> $GITHUB_STEP_SUMMARY
+            echo "💡 **建議**: 檢查 API Key 設定或搜尋條件" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # 可選：自動合併 PR（如果你信任 AI 生成的內容）
+  # auto-merge:
+  #   name: 🔀 Auto Merge
+  #   needs: generate-content
+  #   runs-on: ubuntu-latest
+  #   if: github.event.inputs.auto_publish == 'true'
+  #
+  #   steps:
+  #     - name: 🔀 Merge Pull Request
+  #       uses: pascalgn/automerge-action@v0.15.6
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         MERGE_LABELS: "auto-generated,!needs-review"
+  #         MERGE_METHOD: "squash"
