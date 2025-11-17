@@ -73,6 +73,7 @@ jobs:
 
       - name: 📝 Create PR with fixes
         if: steps.fix.outputs.fixed_count > 0
+        id: create_pr
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -105,12 +106,28 @@ jobs:
 
             所有修復已通過自動化測試驗證。
 
+            ### 🤖 自動合併
+
+            此 PR 將在所有測試通過後**自動合併**。
+
             ---
-            *此 PR 由 GitHub Actions 自動創建*
+            *此 PR 由 GitHub Actions 自動創建，將由 Auto Merge System 自動處理*
           labels: |
             auto-fix
             automated
+            auto-merge
           reviewers: ${{ github.actor }}
+
+      - name: 📊 PR Created Summary
+        if: steps.create_pr.outputs.pull-request-number
+        run: |
+          echo "## 📝 PR 已創建" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **PR Number**: #${{ steps.create_pr.outputs.pull-request-number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **修復數量**: ${{ steps.fix.outputs.fixed_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **狀態**: 等待自動合併" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🤖 Auto Merge System 將自動處理此 PR" >> $GITHUB_STEP_SUMMARY
 
       - name: 📊 Create issue for unfixable problems
         if: steps.scan.outputs.issues_count > steps.fix.outputs.fixed_count

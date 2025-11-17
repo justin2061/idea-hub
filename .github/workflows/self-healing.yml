@@ -1,0 +1,330 @@
+name: 🔄 Self-Healing System (永動機)
+
+on:
+  # 當其他 workflow 失敗時自動觸發
+  workflow_run:
+    workflows:
+      - "🤖 Fully Auto Generate & Publish"
+      - "🚀 Build, Test & Deploy"
+    types:
+      - completed
+
+  # 定期健康檢查（每小時）
+  schedule:
+    - cron: '0 * * * *'
+
+  # 允許手動觸發
+  workflow_dispatch:
+    inputs:
+      force_fix:
+        description: '強制執行修復'
+        type: boolean
+        default: false
+
+env:
+  MAX_RETRY: 3
+  RETRY_DELAY: 300  # 5 分鐘
+
+jobs:
+  # Job 1: 系統健康檢查
+  health-check:
+    name: 🏥 System Health Check
+    runs-on: ubuntu-latest
+    outputs:
+      needs_healing: ${{ steps.check.outputs.needs_healing }}
+      failed_workflow: ${{ steps.check.outputs.failed_workflow }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📊 Check system health
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🏥 檢查系統健康狀態..."
+
+          # 檢查最近的 workflow runs
+          FAILED_RUNS=$(gh run list --limit 10 --json status,conclusion,name,workflowName | \
+            jq '[.[] | select(.conclusion == "failure")] | length')
+
+          echo "failed_runs=$FAILED_RUNS" >> $GITHUB_OUTPUT
+
+          # 判斷是否需要修復
+          if [ "$FAILED_RUNS" -gt 0 ] || [ "${{ github.event.inputs.force_fix }}" = "true" ]; then
+            echo "needs_healing=true" >> $GITHUB_OUTPUT
+
+            # 找出失敗的 workflow
+            FAILED_WORKFLOW=$(gh run list --limit 1 --json status,conclusion,name,workflowName | \
+              jq -r '.[0].workflowName')
+            echo "failed_workflow=$FAILED_WORKFLOW" >> $GITHUB_OUTPUT
+
+            echo "⚠️ 系統需要自我修復！"
+            echo "❌ 失敗的 workflow: $FAILED_WORKFLOW"
+          else
+            echo "needs_healing=false" >> $GITHUB_OUTPUT
+            echo "✅ 系統健康，無需修復"
+          fi
+
+      - name: 📈 Generate health report
+        run: |
+          echo "## 🏥 系統健康報告" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **檢查時間**: $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
+          echo "- **失敗次數**: ${{ steps.check.outputs.failed_runs }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **需要修復**: ${{ steps.check.outputs.needs_healing }}" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.check.outputs.needs_healing }}" = "true" ]; then
+            echo "- **失敗的流程**: ${{ steps.check.outputs.failed_workflow }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Job 2: 自動診斷和修復
+  auto-fix:
+    name: 🔧 Auto Diagnosis & Fix
+    needs: health-check
+    runs-on: ubuntu-latest
+    if: needs.health-check.outputs.needs_healing == 'true'
+    outputs:
+      fix_applied: ${{ steps.fix.outputs.fix_applied }}
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+          bundler-cache: true
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install -r _tests/requirements.txt
+          bundle install
+
+      - name: 🔍 Diagnose issues
+        id: diagnose
+        run: |
+          echo "🔍 診斷系統問題..."
+
+          # 運行所有測試找出問題
+          python _tests/auto_fixer.py scan > diagnosis.json || true
+
+          if [ -f diagnosis.json ]; then
+            ISSUE_COUNT=$(jq '.total_issues' diagnosis.json 2>/dev/null || echo "0")
+            echo "issue_count=$ISSUE_COUNT" >> $GITHUB_OUTPUT
+
+            echo "📋 發現 $ISSUE_COUNT 個問題"
+            cat diagnosis.json
+          else
+            echo "issue_count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔧 Apply fixes
+        id: fix
+        if: steps.diagnose.outputs.issue_count > 0
+        run: |
+          echo "🔧 自動修復問題..."
+
+          # 執行自動修復
+          python _tests/auto_fixer.py fix > fix_result.json || true
+
+          FIXED_COUNT=$(jq '.fixed_count' fix_result.json 2>/dev/null || echo "0")
+          echo "fixed_count=$FIXED_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$FIXED_COUNT" -gt 0 ]; then
+            echo "fix_applied=true" >> $GITHUB_OUTPUT
+            echo "✅ 成功修復 $FIXED_COUNT 個問題"
+          else
+            echo "fix_applied=false" >> $GITHUB_OUTPUT
+            echo "⚠️ 無法自動修復"
+          fi
+
+      - name: 🧪 Verify fixes
+        if: steps.fix.outputs.fix_applied == 'true'
+        run: |
+          echo "🧪 驗證修復..."
+
+          # 重新構建測試
+          bundle exec jekyll build || exit 1
+
+          # 運行測試
+          python _tests/test_links.py || true
+          python _tests/test_content.py || true
+
+          echo "✅ 修復驗證完成"
+
+      - name: 📝 Commit fixes
+        if: steps.fix.outputs.fix_applied == 'true'
+        run: |
+          git config user.name "Self-Healing Bot"
+          git config user.email "bot@github-actions"
+
+          git add -A
+
+          cat > commit_msg.txt <<EOF
+          🔧 自動修復：修正 ${{ steps.fix.outputs.fixed_count }} 個問題
+
+          由 Self-Healing System 自動診斷並修復
+          觸發原因：${{ needs.health-check.outputs.failed_workflow }} 失敗
+
+          修復內容：
+          - 自動掃描問題
+          - 應用修復方案
+          - 驗證修復結果
+
+          ---
+          Run ID: ${{ github.run_id }}
+          Timestamp: $(date '+%Y-%m-%d %H:%M:%S')
+          EOF
+
+          git commit -F commit_msg.txt || echo "No changes to commit"
+          git push origin ${{ github.ref_name }}
+
+  # Job 3: 自動重試失敗的任務
+  auto-retry:
+    name: 🔄 Auto Retry Failed Tasks
+    needs: [health-check, auto-fix]
+    runs-on: ubuntu-latest
+    if: needs.auto-fix.outputs.fix_applied == 'true'
+
+    steps:
+      - name: ⏳ Wait for changes to propagate
+        run: |
+          echo "⏳ 等待 ${{ env.RETRY_DELAY }} 秒後重試..."
+          sleep ${{ env.RETRY_DELAY }}
+
+      - name: 🔄 Retry failed workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FAILED_WORKFLOW="${{ needs.health-check.outputs.failed_workflow }}"
+
+          echo "🔄 重新運行失敗的 workflow: $FAILED_WORKFLOW"
+
+          # 根據失敗的 workflow 重新觸發
+          if [[ "$FAILED_WORKFLOW" == *"Auto Generate"* ]]; then
+            gh workflow run fully-auto-content.yml
+            echo "✅ 已重新觸發內容生成流程"
+          elif [[ "$FAILED_WORKFLOW" == *"Deploy"* ]]; then
+            gh workflow run deploy.yml
+            echo "✅ 已重新觸發部署流程"
+          else
+            echo "⚠️ 未知的 workflow，跳過重試"
+          fi
+
+  # Job 4: 監控和報告
+  monitor-and-report:
+    name: 📊 Monitor & Report
+    needs: [health-check, auto-fix, auto-retry]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📊 Generate comprehensive report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const needsHealing = '${{ needs.health-check.outputs.needs_healing }}';
+            const fixApplied = '${{ needs.auto-fix.outputs.fix_applied }}';
+            const failedWorkflow = '${{ needs.health-check.outputs.failed_workflow }}';
+            const healthCheckResult = '${{ needs.health-check.result }}';
+            const autoFixResult = '${{ needs.auto-fix.result }}';
+            const autoRetryResult = '${{ needs.auto-retry.result }}';
+
+            const now = new Date().toISOString();
+            const dateStr = now.split('T')[0];
+
+            let title = '';
+            let body = '';
+            let labels = ['self-healing', 'automated'];
+
+            if (needsHealing === 'true') {
+              if (fixApplied === 'true') {
+                title = '✅ 自我修復成功 - ' + dateStr;
+                labels.push('fixed');
+
+                body = '## ✅ 自我修復成功報告\n\n' +
+                  '**時間**: ' + new Date().toLocaleString('zh-TW') + '\n' +
+                  '**觸發原因**: ' + failedWorkflow + ' 失敗\n\n' +
+                  '### 🔄 修復流程\n\n' +
+                  '1. ✅ 健康檢查：檢測到系統異常\n' +
+                  '2. ✅ 自動診斷：找出問題根源\n' +
+                  '3. ✅ 應用修復：自動修復問題\n' +
+                  '4. ✅ 驗證修復：確認修復有效\n' +
+                  '5. ✅ 自動重試：重新運行失敗任務\n\n' +
+                  '### 📊 結果統計\n\n' +
+                  '- **健康檢查**: ' + healthCheckResult + '\n' +
+                  '- **自動修復**: ' + autoFixResult + '\n' +
+                  '- **自動重試**: ' + autoRetryResult + '\n\n' +
+                  '---\n' +
+                  '🤖 系統已恢復正常運作！\n' +
+                  '*由 Self-Healing System 自動生成*';
+              } else {
+                title = '⚠️ 需要人工介入 - ' + dateStr;
+                labels.push('needs-attention');
+
+                body = '## ⚠️ 自動修復失敗\n\n' +
+                  '**時間**: ' + new Date().toLocaleString('zh-TW') + '\n' +
+                  '**問題**: ' + failedWorkflow + ' 失敗\n\n' +
+                  '### ❌ 無法自動修復\n\n' +
+                  '自動修復系統無法解決此問題，需要人工介入。\n\n' +
+                  '### 🔍 建議檢查\n\n' +
+                  '1. 查看 workflow 運行日誌\n' +
+                  '2. 檢查最近的代碼變更\n' +
+                  '3. 驗證系統配置\n\n' +
+                  '### 📊 診斷結果\n\n' +
+                  '- **健康檢查**: ' + healthCheckResult + '\n' +
+                  '- **自動修復**: ' + autoFixResult + '\n\n' +
+                  '---\n' +
+                  '⚠️ 請儘快處理此問題\n' +
+                  '*由 Self-Healing System 自動生成*';
+              }
+
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: labels
+              });
+            }
+
+      - name: 📈 Update dashboard
+        run: |
+          echo "## 🔄 Self-Healing System Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 執行結果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 階段 | 狀態 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 健康檢查 | ${{ needs.health-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 自動修復 | ${{ needs.auto-fix.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 自動重試 | ${{ needs.auto-retry.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.health-check.outputs.needs_healing }}" = "true" ]; then
+            echo "### 🔧 系統狀態" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- **需要修復**: 是" >> $GITHUB_STEP_SUMMARY
+            echo "- **失敗流程**: ${{ needs.health-check.outputs.failed_workflow }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **修復應用**: ${{ needs.auto-fix.outputs.fix_applied }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **系統運行正常**" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,207 @@
+name: 🤝 Auto Merge PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to merge'
+        required: true
+
+jobs:
+  auto-merge:
+    name: 🤖 Auto Merge
+    runs-on: ubuntu-latest
+    # 只自動合併由 bot 創建的 PR
+    if: |
+      github.actor == 'github-actions[bot]' ||
+      contains(github.event.pull_request.title, '🔧 自動修復') ||
+      contains(github.event.pull_request.title, '🤖 自動生成') ||
+      contains(github.event.pull_request.labels.*.name, 'auto-fix') ||
+      contains(github.event.pull_request.labels.*.name, 'automated')
+
+    steps:
+      - name: 📥 Checkout PR
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+          bundler-cache: true
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install -r _tests/requirements.txt
+          bundle install
+
+      - name: 🔨 Build site
+        id: build
+        run: |
+          bundle exec jekyll build --verbose
+          echo "build_status=success" >> $GITHUB_OUTPUT
+        env:
+          JEKYLL_ENV: production
+
+      - name: ✅ Run all tests
+        id: test
+        continue-on-error: true
+        run: |
+          echo "🧪 運行所有測試..."
+
+          FAILED=0
+
+          # 測試 1: 連結檢查
+          if python _tests/test_links.py; then
+            echo "✅ 連結測試通過"
+          else
+            echo "❌ 連結測試失敗"
+            FAILED=$((FAILED + 1))
+          fi
+
+          # 測試 2: 內容品質
+          if python _tests/test_content.py; then
+            echo "✅ 內容測試通過"
+          else
+            echo "❌ 內容測試失敗"
+            FAILED=$((FAILED + 1))
+          fi
+
+          # 測試 3: SEO 檢查
+          if python _tests/test_seo.py; then
+            echo "✅ SEO 測試通過"
+          else
+            echo "❌ SEO 測試失敗"
+            FAILED=$((FAILED + 1))
+          fi
+
+          echo "failed_tests=$FAILED" >> $GITHUB_OUTPUT
+
+          if [ $FAILED -eq 0 ]; then
+            echo "test_status=success" >> $GITHUB_OUTPUT
+            echo "✅ 所有測試通過"
+            exit 0
+          else
+            echo "test_status=failed" >> $GITHUB_OUTPUT
+            echo "❌ 有 $FAILED 個測試失敗"
+            exit 1
+          fi
+
+      - name: 📊 Test summary
+        if: always()
+        run: |
+          echo "## 🧪 測試結果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **構建**: ${{ steps.build.outputs.build_status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **測試**: ${{ steps.test.outputs.test_status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **失敗數**: ${{ steps.test.outputs.failed_tests }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: ✅ Approve PR
+        if: steps.test.outputs.test_status == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+
+            // 添加批准
+            await github.rest.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              event: 'APPROVE',
+              body: '✅ 自動審核通過\n\n所有測試均已通過，可以安全合併。\n\n---\n*由 Auto Merge Bot 自動審核*'
+            });
+
+      - name: 🚀 Auto merge PR
+        if: steps.test.outputs.test_status == 'success'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+
+            try {
+              // 嘗試合併 PR
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                merge_method: 'squash',
+                commit_title: '🤖 Auto-merge: ' + context.payload.pull_request.title,
+                commit_message: 'Automatically merged after passing all tests.\n\nRun ID: ' + context.runId
+              });
+
+              console.log('✅ PR #' + prNumber + ' 已成功合併');
+
+              // 添加評論
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: '🎉 PR 已自動合併！\n\n✅ 所有測試通過\n✅ 自動審核通過\n✅ 已合併至 main 分支\n\n---\n*由 Auto Merge System 自動執行*'
+              });
+
+            } catch (error) {
+              console.error('❌ 合併失敗:', error.message);
+
+              // 添加評論說明失敗原因
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: '⚠️ 自動合併失敗\n\n錯誤: ' + error.message + '\n\n請手動合併此 PR。'
+              });
+
+              throw error;
+            }
+
+      - name: ❌ Comment on failed tests
+        if: steps.test.outputs.test_status == 'failed'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const failedCount = '${{ steps.test.outputs.failed_tests }}';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: '❌ 自動合併失敗\n\n' +
+                '有 ' + failedCount + ' 個測試失敗。請檢查並修復問題後再次提交。\n\n' +
+                '### 🔍 檢查項目\n\n' +
+                '- 查看 Actions 日誌了解詳細錯誤\n' +
+                '- 確認所有連結有效\n' +
+                '- 驗證內容品質\n' +
+                '- 檢查 SEO 設定\n\n' +
+                '---\n' +
+                '*由 Auto Merge System 自動生成*'
+            });
+
+      - name: 🔄 Trigger self-healing on failure
+        if: steps.test.outputs.test_status == 'failed'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // 觸發 self-healing workflow
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'self-healing.yml',
+              ref: 'main',
+              inputs: {
+                force_fix: 'true'
+              }
+            });
+
+            console.log('🔄 已觸發 Self-Healing System');
