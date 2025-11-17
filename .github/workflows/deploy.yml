@@ -103,145 +103,168 @@ jobs:
           path: _site/
           retention-days: 7
 
-  # Job 2: 部署到 VM
-  deploy:
-    name: 🚀 Deploy to VM
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+  # Job 2: 部署到 VM（可選 - 目前已停用）
+  # 如果需要啟用 VM 部署，請：
+  # 1. 在 GitHub Secrets 中添加: VM_SSH_KEY, VM_HOST, VM_USER, VM_DEPLOY_PATH
+  # 2. 取消下方所有註釋
+  # 3. 修改 notify job 的 needs 包含 deploy 和 post-deployment-test
 
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+  # deploy:
+  #   name: 🚀 Deploy to VM
+  #   needs: build-and-test
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+  #
+  #   steps:
+  #     - name: 📥 Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: 📦 Download build artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: site-build
+  #         path: _site/
+  #
+  #     - name: 🔍 Check VM configuration
+  #       id: check_vm
+  #       run: |
+  #         if [ -z "${{ secrets.VM_SSH_KEY }}" ] || [ -z "${{ secrets.VM_HOST }}" ]; then
+  #           echo "⚠️ VM secrets 未配置，跳過 VM 部署"
+  #           echo "vm_configured=false" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "✅ VM secrets 已配置"
+  #           echo "vm_configured=true" >> $GITHUB_OUTPUT
+  #         fi
+  #
+  #     - name: 🔑 Setup SSH
+  #       if: steps.check_vm.outputs.vm_configured == 'true'
+  #       run: |
+  #         mkdir -p ~/.ssh
+  #         echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/deploy_key
+  #         chmod 600 ~/.ssh/deploy_key
+  #         ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+  #
+  #     - name: 🚀 Deploy to VM
+  #       if: steps.check_vm.outputs.vm_configured == 'true'
+  #       run: |
+  #         # 創建備份
+  #         ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+  #           "cd ${{ secrets.VM_DEPLOY_PATH }} && \
+  #            if [ -d 'current' ]; then \
+  #              cp -r current backup-$(date +%Y%m%d-%H%M%S); \
+  #            fi"
+  #
+  #         # 同步新文件
+  #         rsync -avz --delete \
+  #           -e "ssh -i ~/.ssh/deploy_key" \
+  #           _site/ \
+  #           ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:${{ secrets.VM_DEPLOY_PATH }}/current/
+  #
+  #         # 重啟服務（如果需要）
+  #         ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+  #           "sudo systemctl reload nginx || true"
+  #
+  #     - name: 🏥 Health check
+  #       if: steps.check_vm.outputs.vm_configured == 'true'
+  #       run: |
+  #         # 等待服務啟動
+  #         sleep 5
+  #
+  #         # 檢查網站是否可訪問
+  #         HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VM_HOST }})
+  #
+  #         if [ $HTTP_CODE -eq 200 ]; then
+  #           echo "✅ Health check passed! Site is responding with HTTP $HTTP_CODE"
+  #         else
+  #           echo "❌ Health check failed! Site responding with HTTP $HTTP_CODE"
+  #           exit 1
+  #         fi
+  #
+  #     - name: 🔙 Rollback on failure
+  #       if: failure() && steps.check_vm.outputs.vm_configured == 'true'
+  #       run: |
+  #         echo "❌ Deployment failed, rolling back..."
+  #         ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+  #           "cd ${{ secrets.VM_DEPLOY_PATH }} && \
+  #            LATEST_BACKUP=\$(ls -t backup-* | head -1) && \
+  #            if [ -n \"\$LATEST_BACKUP\" ]; then \
+  #              rm -rf current; \
+  #              cp -r \$LATEST_BACKUP current; \
+  #              sudo systemctl reload nginx; \
+  #            fi"
+  #
+  #     - name: 📊 Deployment summary
+  #       if: always()
+  #       run: |
+  #         echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+  #         echo "" >> $GITHUB_STEP_SUMMARY
+  #         echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+  #         echo "- **VM Configured**: ${{ steps.check_vm.outputs.vm_configured }}" >> $GITHUB_STEP_SUMMARY
+  #         echo "- **Deploy time**: $(date)" >> $GITHUB_STEP_SUMMARY
+  #         echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
 
-      - name: 📦 Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: site-build
-          path: _site/
+  # Job 3: 部署後測試（目前已停用 - 因為 VM 部署已停用）
+  # post-deployment-test:
+  #   name: 🧪 Post-Deployment Tests
+  #   needs: deploy
+  #   runs-on: ubuntu-latest
+  #   if: success() && needs.deploy.result == 'success'
+  #
+  #   steps:
+  #     - name: 📥 Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: 🔗 Test deployed site
+  #       run: |
+  #         pip install requests beautifulsoup4 selenium
+  #         python _tests/test_deployed_site.py http://${{ secrets.VM_HOST }}
+  #
+  #     - name: ⚡ Performance benchmark
+  #       run: |
+  #         # 使用 Lighthouse 或其他工具測試性能
+  #         npm install -g lighthouse
+  #         lighthouse http://${{ secrets.VM_HOST }} \
+  #           --output=json \
+  #           --output-path=./lighthouse-report.json \
+  #           --chrome-flags="--headless"
+  #
+  #     - name: 📊 Upload performance report
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: performance-report
+  #         path: lighthouse-report.json
 
-      - name: 🔑 Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
-
-      - name: 🚀 Deploy to VM
-        run: |
-          # 創建備份
-          ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
-            "cd ${{ secrets.VM_DEPLOY_PATH }} && \
-             if [ -d 'current' ]; then \
-               cp -r current backup-$(date +%Y%m%d-%H%M%S); \
-             fi"
-
-          # 同步新文件
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key" \
-            _site/ \
-            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:${{ secrets.VM_DEPLOY_PATH }}/current/
-
-          # 重啟服務（如果需要）
-          ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
-            "sudo systemctl reload nginx || true"
-
-      - name: 🏥 Health check
-        run: |
-          # 等待服務啟動
-          sleep 5
-
-          # 檢查網站是否可訪問
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VM_HOST }})
-
-          if [ $HTTP_CODE -eq 200 ]; then
-            echo "✅ Health check passed! Site is responding with HTTP $HTTP_CODE"
-          else
-            echo "❌ Health check failed! Site responding with HTTP $HTTP_CODE"
-            exit 1
-          fi
-
-      - name: 🔙 Rollback on failure
-        if: failure()
-        run: |
-          echo "❌ Deployment failed, rolling back..."
-          ssh -i ~/.ssh/deploy_key ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
-            "cd ${{ secrets.VM_DEPLOY_PATH }} && \
-             LATEST_BACKUP=\$(ls -t backup-* | head -1) && \
-             if [ -n \"\$LATEST_BACKUP\" ]; then \
-               rm -rf current; \
-               cp -r \$LATEST_BACKUP current; \
-               sudo systemctl reload nginx; \
-             fi"
-
-      - name: 📊 Deployment summary
-        if: always()
-        run: |
-          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Deployed to**: ${{ secrets.VM_HOST }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Deploy time**: $(date)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-
-  # Job 3: 部署後測試
-  post-deployment-test:
-    name: 🧪 Post-Deployment Tests
-    needs: deploy
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: 🔗 Test deployed site
-        run: |
-          pip install requests beautifulsoup4 selenium
-          python _tests/test_deployed_site.py http://${{ secrets.VM_HOST }}
-
-      - name: ⚡ Performance benchmark
-        run: |
-          # 使用 Lighthouse 或其他工具測試性能
-          npm install -g lighthouse
-          lighthouse http://${{ secrets.VM_HOST }} \
-            --output=json \
-            --output-path=./lighthouse-report.json \
-            --chrome-flags="--headless"
-
-      - name: 📊 Upload performance report
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-report
-          path: lighthouse-report.json
-
-  # Job 4: 通知
+  # Job 2: 通知（可選）
   notify:
     name: 📢 Notify
-    needs: [build-and-test, deploy, post-deployment-test]
+    needs: [build-and-test]
     runs-on: ubuntu-latest
     if: always()
 
     steps:
       - name: 📊 Create summary
         run: |
-          echo "## 📊 Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Build & Test Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build**: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Deploy**: ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Tests**: ${{ needs.post-deployment-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build & Test**: ${{ needs.build-and-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **VM Deploy**: Disabled (use GitHub Pages)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Site will be deployed to GitHub Pages automatically" >> $GITHUB_STEP_SUMMARY
 
       - name: 💬 Slack notification
         if: env.SLACK_WEBHOOK != ''
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: |
-          STATUS="${{ needs.deploy.result }}"
+          STATUS="${{ needs.build-and-test.result }}"
           if [ "$STATUS" = "success" ]; then
             COLOR="good"
             EMOJI="✅"
+            MESSAGE="Build & Test successful"
           else
             COLOR="danger"
             EMOJI="❌"
+            MESSAGE="Build & Test failed"
           fi
 
           curl -X POST $SLACK_WEBHOOK \
@@ -249,7 +272,7 @@ jobs:
             -d "{
               \"attachments\": [{
                 \"color\": \"$COLOR\",
-                \"title\": \"$EMOJI Deployment $STATUS\",
+                \"title\": \"$EMOJI $MESSAGE\",
                 \"text\": \"Commit: ${{ github.sha }}\nBy: ${{ github.actor }}\"
               }]
             }"
