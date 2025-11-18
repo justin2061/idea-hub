@@ -110,13 +110,27 @@ class AutoContentGenerator:
         trending_topics.extend(self._search_hackernews(category))
 
         # 方法 3: 使用 Reddit API（免費，無需 key）
-        trending_topics.extend(self._search_reddit(category))
+        trending_topics.extend(self._search_reddit(category, category_key))
 
         # 方法 4: 使用 Google Trends（透過 serpapi 或 pytrends）
         # trending_topics.extend(self._search_google_trends(category))
 
         # 去重並排序（按相關度和熱度）
         unique_topics = self._deduplicate_and_rank(trending_topics)
+
+        print(f"  ℹ️  總共找到 {len(trending_topics)} 個話題，去重後剩 {len(unique_topics)} 個")
+
+        if not unique_topics:
+            print(f"  ⚠️  未找到任何相關話題，將使用預設話題")
+            # 提供一個預設話題作為後備
+            unique_topics = [{
+                'title': f"探索 {category['name']} 的最新趨勢與實踐",
+                'description': f"深入分析 {category['name']} 領域的最新發展和實用見解",
+                'url': "https://github.com",
+                'source': 'Default',
+                'published_at': datetime.now().isoformat(),
+                'relevance': 0.5
+            }]
 
         return unique_topics[:5]  # 返回前 5 個最熱門的話題
 
@@ -155,9 +169,12 @@ class AutoContentGenerator:
                             'published_at': article.get('publishedAt', ''),
                             'relevance': 0.8
                         })
+                else:
+                    print(f"  ⚠️  News API 回應錯誤: HTTP {response.status_code}")
         except Exception as e:
             print(f"  ⚠️  News API 搜尋失敗: {e}")
 
+        print(f"  📰 News API 找到 {len(topics)} 個話題")
         return topics
 
     def _search_hackernews(self, category: Dict) -> List[Dict]:
@@ -195,9 +212,10 @@ class AutoContentGenerator:
         except Exception as e:
             print(f"  ⚠️  Hacker News 搜尋失敗: {e}")
 
+        print(f"  🔶 Hacker News 找到 {len(topics)} 個話題")
         return topics
 
-    def _search_reddit(self, category: Dict) -> List[Dict]:
+    def _search_reddit(self, category: Dict, category_key: str) -> List[Dict]:
         """搜尋 Reddit 熱門文章"""
         topics = []
 
@@ -212,7 +230,7 @@ class AutoContentGenerator:
         }
 
         try:
-            for subreddit in subreddits.get(list(self.categories.keys())[0], ['all'])[:2]:
+            for subreddit in subreddits.get(category_key, ['all'])[:2]:
                 url = f"https://www.reddit.com/r/{subreddit}/hot.json"
                 headers = {'User-Agent': 'AutoContentBot/1.0'}
 
@@ -239,6 +257,7 @@ class AutoContentGenerator:
         except Exception as e:
             print(f"  ⚠️  Reddit 搜尋失敗: {e}")
 
+        print(f"  🔴 Reddit 找到 {len(topics)} 個話題")
         return topics
 
     def _deduplicate_and_rank(self, topics: List[Dict]) -> List[Dict]:
@@ -426,10 +445,6 @@ excerpt: "{excerpt}"
 
             # 1. 搜尋熱門話題
             topics = self.search_trending_topics(category_key)
-
-            if not topics:
-                print(f"  ⚠️  未找到相關話題，跳過此分類")
-                continue
 
             print(f"  ✅ 找到 {len(topics)} 個熱門話題")
 
