@@ -196,9 +196,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y optipng jpegoptim
 
-          # 優化圖片
-          find assets/images -name "*.png" -exec optipng -o2 {} \;
-          find assets/images -name "*.jpg" -exec jpegoptim --max=85 {} \;
+          # 優化圖片（如果目錄存在）
+          if [ -d "assets/images" ]; then
+            echo "優化 assets/images 目錄中的圖片..."
+            find assets/images -name "*.png" -exec optipng -o2 {} \;
+            find assets/images -name "*.jpg" -exec jpegoptim --max=85 {} \;
+            echo "圖片優化完成"
+          else
+            echo "assets/images 目錄不存在，跳過圖片優化"
+          fi
 
       - name: 📦 Check for large files
         run: |
