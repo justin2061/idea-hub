@@ -12,15 +12,48 @@ import re
 import argparse
 import anthropic
 from pathlib import Path
+import json
+import hashlib
+from functools import lru_cache
 
 class AIContentFiller:
-    def __init__(self, api_key=None):
+    def __init__(self, api_key=None, use_cache=True):
         self.api_key = api_key or os.environ.get('ANTHROPIC_API_KEY')
         if self.api_key:
             self.client = anthropic.Anthropic(api_key=self.api_key)
         else:
             self.client = None
             print("⚠️  未設定 API Key，將使用互動模式")
+
+        # 性能優化：添加緩存支持
+        self.use_cache = use_cache
+        self.cache_dir = Path('_tests/.cache')
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_file = self.cache_dir / 'ai_content_cache.json'
+        self.cache = self._load_cache()
+
+    def _load_cache(self):
+        """載入緩存（性能優化）"""
+        if self.use_cache and self.cache_file.exists():
+            try:
+                with open(self.cache_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception:
+                return {}
+        return {}
+
+    def _save_cache(self):
+        """保存緩存（性能優化）"""
+        if self.use_cache:
+            try:
+                with open(self.cache_file, 'w', encoding='utf-8') as f:
+                    json.dump(self.cache, f, indent=2, ensure_ascii=False)
+            except Exception as e:
+                print(f"⚠️  保存緩存失敗: {e}")
+
+    def _get_cache_key(self, prompt: str) -> str:
+        """生成緩存鍵（性能優化）"""
+        return hashlib.md5(prompt.encode('utf-8')).hexdigest()
 
     def extract_todos(self, content):
         """提取文章中的所有 TODO 項目"""
@@ -50,7 +83,7 @@ class AIContentFiller:
         return '\n'.join(context_lines)
 
     def generate_content_with_ai(self, todo_item, context, article_title):
-        """使用 AI 生成內容"""
+        """使用 AI 生成內容（帶緩存優化）"""
         if not self.client:
             return self.interactive_mode(todo_item, context)
 
@@ -74,6 +107,12 @@ class AIContentFiller:
 只輸出內容本身，不要包含其他說明。
 """
 
+        # 性能優化：檢查緩存
+        cache_key = self._get_cache_key(prompt)
+        if self.use_cache and cache_key in self.cache:
+            print("  ⚡ 使用緩存內容")
+            return self.cache[cache_key]
+
         try:
             message = self.client.messages.create(
                 model="claude-sonnet-4-5-20250929",
@@ -84,7 +123,14 @@ class AIContentFiller:
                 }]
             )
 
-            return message.content[0].text
+            content = message.content[0].text
+
+            # 保存到緩存
+            if self.use_cache:
+                self.cache[cache_key] = content
+                self._save_cache()
+
+            return content
         except Exception as e:
             print(f"❌ AI 生成失敗: {e}")
             return self.interactive_mode(todo_item, context)

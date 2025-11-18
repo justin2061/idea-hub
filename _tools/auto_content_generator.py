@@ -16,6 +16,8 @@ from pathlib import Path
 import anthropic
 import requests
 from typing import List, Dict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 
 class AutoContentGenerator:
     def __init__(self, api_key=None):
@@ -95,7 +97,7 @@ class AutoContentGenerator:
 
     def search_trending_topics(self, category_key: str, days_back: int = 7) -> List[Dict]:
         """
-        搜尋該分類的熱門話題
+        搜尋該分類的熱門話題（並行優化）
         使用多個來源：Google Trends API、News API、Reddit、Hacker News
         """
         print(f"🔍 搜尋 {self.categories[category_key]['name']} 的熱門話題...")
@@ -103,17 +105,16 @@ class AutoContentGenerator:
         category = self.categories[category_key]
         trending_topics = []
 
-        # 方法 1: 使用 News API（免費版，需要 API key）
-        trending_topics.extend(self._search_news_api(category))
+        # 使用並行方式同時查詢多個來源（性能優化）
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            future_news = executor.submit(self._search_news_api, category)
+            future_hn = executor.submit(self._search_hackernews, category)
+            future_reddit = executor.submit(self._search_reddit, category, category_key)
 
-        # 方法 2: 使用 Hacker News API（免費，無需 key）
-        trending_topics.extend(self._search_hackernews(category))
-
-        # 方法 3: 使用 Reddit API（免費，無需 key）
-        trending_topics.extend(self._search_reddit(category, category_key))
-
-        # 方法 4: 使用 Google Trends（透過 serpapi 或 pytrends）
-        # trending_topics.extend(self._search_google_trends(category))
+            # 收集結果
+            trending_topics.extend(future_news.result())
+            trending_topics.extend(future_hn.result())
+            trending_topics.extend(future_reddit.result())
 
         # 去重並排序（按相關度和熱度）
         unique_topics = self._deduplicate_and_rank(trending_topics)
@@ -178,7 +179,7 @@ class AutoContentGenerator:
         return topics
 
     def _search_hackernews(self, category: Dict) -> List[Dict]:
-        """搜尋 Hacker News 熱門文章"""
+        """搜尋 Hacker News 熱門文章（並行優化）"""
         topics = []
 
         try:
@@ -189,26 +190,39 @@ class AutoContentGenerator:
             if response.status_code == 200:
                 story_ids = response.json()[:30]  # 取前 30 篇
 
-                # 獲取文章詳情
-                for story_id in story_ids[:10]:  # 只檢查前 10 篇
-                    story_url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
-                    story_response = requests.get(story_url, timeout=5)
+                # 使用並行請求獲取文章詳情（性能優化）
+                def fetch_story(story_id):
+                    try:
+                        story_url = f"https://hacker-news.firebaseio.com/v0/item/{story_id}.json"
+                        story_response = requests.get(story_url, timeout=5)
 
-                    if story_response.status_code == 200:
-                        story = story_response.json()
+                        if story_response.status_code == 200:
+                            return story_response.json()
+                    except Exception:
+                        pass
+                    return None
 
-                        # 檢查是否與分類關鍵字相關
-                        title = story.get('title', '').lower()
-                        if any(keyword.lower() in title for keyword in category['keywords']):
-                            topics.append({
-                                'title': story.get('title', ''),
-                                'description': story.get('text', '')[:200],
-                                'url': story.get('url', f"https://news.ycombinator.com/item?id={story_id}"),
-                                'source': 'HackerNews',
-                                'published_at': datetime.fromtimestamp(story.get('time', 0)).isoformat(),
-                                'relevance': 0.7,
-                                'score': story.get('score', 0)
-                            })
+                # 並行處理前 10 篇文章
+                with ThreadPoolExecutor(max_workers=5) as executor:
+                    futures = {executor.submit(fetch_story, sid): sid for sid in story_ids[:10]}
+
+                    for future in as_completed(futures):
+                        story_id = futures[future]
+                        story = future.result()
+
+                        if story:
+                            # 檢查是否與分類關鍵字相關
+                            title = story.get('title', '').lower()
+                            if any(keyword.lower() in title for keyword in category['keywords']):
+                                topics.append({
+                                    'title': story.get('title', ''),
+                                    'description': story.get('text', '')[:200],
+                                    'url': story.get('url', f"https://news.ycombinator.com/item?id={story_id}"),
+                                    'source': 'HackerNews',
+                                    'published_at': datetime.fromtimestamp(story.get('time', 0)).isoformat(),
+                                    'relevance': 0.7,
+                                    'score': story.get('score', 0)
+                                })
         except Exception as e:
             print(f"  ⚠️  Hacker News 搜尋失敗: {e}")
 
