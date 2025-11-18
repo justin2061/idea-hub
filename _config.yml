@@ -79,6 +79,30 @@ lsi: false
 excerpt_separator: "\n\n"
 incremental: false
 
+# =============================
+# 性能優化設定
+# =============================
+# 啟用增量重建（開發模式）
+# incremental: true
+
+# 限制文章數量以加快構建速度（開發模式）
+# limit_posts: 10
+
+# 禁用不必要的插件可以提高性能
+# 生產環境建議保持所有插件啟用
+
+# 壓縮 HTML 輸出（可選，需要 jekyll-compress-html）
+# compress_html:
+#   clippings: all
+#   comments: all
+#   endings: all
+#   ignore:
+#     envs: [development]
+
+# 優化資源載入
+# 使用 CDN 加速靜態資源
+# 啟用瀏覽器緩存
+
 # 包含特定目錄
 include:
   - _pages

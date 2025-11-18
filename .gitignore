@@ -27,6 +27,10 @@ Thumbs.db
 *.tmp
 *.temp
 
+# 性能優化緩存
+_tests/.cache/
+_tests/reports/
+
 # 環境變數檔案
 .env
 .env.local
