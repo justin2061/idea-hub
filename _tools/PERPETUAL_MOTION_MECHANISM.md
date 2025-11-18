@@ -1475,7 +1475,7 @@ GENERATION_PROMPT = f"""
 
 # 調整溫度和其他參數
 response = self.client.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-4-5-20250929",
     max_tokens=8000,
     temperature=0.7,  # 調整為 0.7 獲得更有創意的內容
     messages=[...]

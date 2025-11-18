@@ -175,7 +175,7 @@ max_tokens = 4000  # 約 2000-3000 字
 temperature = 0.7  # 0.0-1.0，越高越有創意
 
 # 模型選擇
-model = "claude-3-5-sonnet-20241022"  # 最新最強的模型
+model = "claude-sonnet-4-5-20250929"  # Claude Sonnet 4.5 - 最新最強的模型
 ```
 
 ---
