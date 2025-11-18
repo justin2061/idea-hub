@@ -46,7 +46,14 @@ jobs:
 
       - name: 🔨 Build Jekyll site
         run: |
+          echo "⏱️ 開始構建時間: $(date '+%Y-%m-%d %H:%M:%S')"
+          START_TIME=$(date +%s)
           bundle exec jekyll build --verbose
+          END_TIME=$(date +%s)
+          BUILD_DURATION=$((END_TIME - START_TIME))
+          echo "⏱️ 構建完成時間: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "⏱️ 構建耗時: ${BUILD_DURATION} 秒"
+          echo "BUILD_DURATION=${BUILD_DURATION}" >> $GITHUB_ENV
         env:
           JEKYLL_ENV: production
 
@@ -54,10 +61,13 @@ jobs:
         run: |
           echo "## 🔨 Build Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build time**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build duration**: ${BUILD_DURATION} seconds ⏱️" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build completed**: $(date)" >> $GITHUB_STEP_SUMMARY
           echo "- **Total files**: $(find _site -type f | wc -l)" >> $GITHUB_STEP_SUMMARY
           echo "- **Total size**: $(du -sh _site | cut -f1)" >> $GITHUB_STEP_SUMMARY
           echo "- **HTML pages**: $(find _site -name '*.html' | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- **JS/CSS files**: $(find _site -name '*.js' -o -name '*.css' | wc -l)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Images**: $(find _site -name '*.jpg' -o -name '*.png' -o -name '*.gif' -o -name '*.svg' | wc -l)" >> $GITHUB_STEP_SUMMARY
 
       - name: ✅ Validate HTML
         continue-on-error: true

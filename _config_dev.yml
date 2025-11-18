@@ -1,0 +1,46 @@
+# =============================
+# 開發環境配置
+# =============================
+# 使用方法：
+# bundle exec jekyll serve --config _config.yml,_config_dev.yml
+#
+# 這個配置文件包含開發環境的優化設置
+
+# 啟用增量重建（僅重建修改的文件）
+# 注意：生產環境不建議使用
+incremental: true
+
+# 限制文章數量以加快構建速度
+# 開發時只處理最近的 10 篇文章
+limit_posts: 10
+
+# 禁用部分插件以加快構建
+# 開發時可以暫時禁用這些插件
+# plugins:
+#   - jekyll-sitemap
+#   - jekyll-feed
+
+# 開啟詳細輸出以便調試
+verbose: true
+
+# 禁用 HTML 壓縮以便調試
+compress_html:
+  clippings: []
+  comments: []
+  endings: []
+  profile: false
+  blanklines: true
+
+# 開發伺服器設置
+host: 0.0.0.0
+port: 4000
+livereload: true
+livereload_port: 35729
+
+# 顯示草稿和未來文章
+show_drafts: true
+future: true
+unpublished: true
+
+# 開啟性能分析
+profile: true

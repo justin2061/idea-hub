@@ -1,0 +1,45 @@
+name: 🖼️ Optimize Images
+
+on:
+  push:
+    paths:
+      - 'assets/images/**'
+      - '**.jpg'
+      - '**.jpeg'
+      - '**.png'
+      - '**.gif'
+  workflow_dispatch:
+
+jobs:
+  optimize-images:
+    name: 🖼️ Optimize Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🖼️ Optimize images
+        uses: calibreapp/image-actions@main
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          jpegQuality: '85'
+          pngQuality: '85'
+          webpQuality: '85'
+          ignorePaths: 'node_modules/**,vendor/**'
+          compressOnly: true
+
+      - name: 📊 Generate optimization report
+        if: success()
+        run: |
+          echo "## 🖼️ Image Optimization Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Images have been optimized successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Quality Settings:**" >> $GITHUB_STEP_SUMMARY
+          echo "- JPEG: 85%" >> $GITHUB_STEP_SUMMARY
+          echo "- PNG: 85%" >> $GITHUB_STEP_SUMMARY
+          echo "- WebP: 85%" >> $GITHUB_STEP_SUMMARY
