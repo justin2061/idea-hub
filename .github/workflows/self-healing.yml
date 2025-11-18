@@ -25,6 +25,12 @@ env:
   MAX_RETRY: 3
   RETRY_DELAY: 300  # 5 分鐘
 
+# 設定必要的權限
+permissions:
+  contents: write
+  issues: write
+  actions: read
+
 jobs:
   # Job 1: 系統健康檢查
   health-check:

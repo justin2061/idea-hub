@@ -10,6 +10,12 @@ on:
     types:
       - completed
 
+# 設定必要的權限
+permissions:
+  contents: write
+  issues: write
+  actions: read
+
 jobs:
   detect-and-fix:
     name: 🔍 Detect & Fix Issues

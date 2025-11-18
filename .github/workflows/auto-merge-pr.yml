@@ -9,6 +9,11 @@ on:
         description: 'PR number to merge'
         required: true
 
+# 設定必要的權限
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   auto-merge:
     name: 🤖 Auto Merge
