@@ -15,14 +15,22 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import anthropic
 import requests
-from typing import List, Dict
+from typing import List, Dict, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
+import hashlib
 
 class AutoContentGenerator:
-    def __init__(self, api_key=None):
+    def __init__(self, api_key=None, use_cache=True):
         self.api_key = api_key or os.environ.get('ANTHROPIC_API_KEY')
         self.client = anthropic.Anthropic(api_key=self.api_key) if self.api_key else None
+        self.use_cache = use_cache
+
+        # 設置緩存目錄
+        self.cache_dir = Path('_cache')
+        self.cache_dir.mkdir(exist_ok=True)
+        self.ai_cache_dir = self.cache_dir / 'ai_responses'
+        self.ai_cache_dir.mkdir(exist_ok=True)
 
         # 文章分類配置
         self.categories = {
@@ -293,7 +301,7 @@ class AutoContentGenerator:
         return unique_topics
 
     def generate_article_with_ai(self, topic: Dict, category_key: str) -> str:
-        """使用 AI 生成文章"""
+        """使用 AI 生成文章（支持緩存）"""
         if not self.client:
             print("❌ 未設定 ANTHROPIC_API_KEY，無法使用 AI 生成")
             return None
@@ -301,6 +309,12 @@ class AutoContentGenerator:
         category = self.categories[category_key]
 
         print(f"🤖 使用 AI 生成文章：{topic['title'][:50]}...")
+
+        # 檢查緩存
+        cache_key = self._get_cache_key(topic, category_key)
+        cached_article = self._get_cached_response(cache_key)
+        if cached_article:
+            return cached_article
 
         # 構建提示詞
         prompt = f"""你是一位專業的繁體中文科技部落格作家。請根據以下資訊撰寫一篇深度文章：
@@ -365,6 +379,9 @@ excerpt: "{excerpt}"
             # 添加相關連結
             full_article += f"\n\n---\n\n**參考資料：**\n- [{topic['title']}]({topic['url']})\n"
 
+            # 保存到緩存
+            self._save_to_cache(cache_key, full_article)
+
             return full_article
 
         except Exception as e:
@@ -400,6 +417,53 @@ excerpt: "{excerpt}"
     def _format_yaml_list(self, items: List[str]) -> str:
         """格式化 YAML 列表"""
         return '\n'.join([f"  - {item}" for item in items])
+
+    def _get_cache_key(self, topic: Dict, category_key: str) -> str:
+        """生成緩存鍵"""
+        # 使用主題標題和分類生成唯一鍵
+        cache_string = f"{topic['title']}-{category_key}"
+        return hashlib.md5(cache_string.encode()).hexdigest()
+
+    def _get_cached_response(self, cache_key: str) -> Optional[str]:
+        """從緩存獲取 AI 響應"""
+        if not self.use_cache:
+            return None
+
+        cache_file = self.ai_cache_dir / f"{cache_key}.json"
+        if cache_file.exists():
+            try:
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    cache_data = json.load(f)
+
+                # 檢查緩存是否過期（7天）
+                cached_time = datetime.fromisoformat(cache_data['timestamp'])
+                if datetime.now() - cached_time < timedelta(days=7):
+                    print(f"  ✅ 使用緩存的 AI 響應（節省 API 調用）")
+                    return cache_data['content']
+                else:
+                    print(f"  ⏰ 緩存已過期，重新生成")
+            except Exception as e:
+                print(f"  ⚠️  讀取緩存失敗: {e}")
+
+        return None
+
+    def _save_to_cache(self, cache_key: str, content: str):
+        """保存 AI 響應到緩存"""
+        if not self.use_cache:
+            return
+
+        cache_file = self.ai_cache_dir / f"{cache_key}.json"
+        cache_data = {
+            'timestamp': datetime.now().isoformat(),
+            'content': content
+        }
+
+        try:
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(cache_data, f, ensure_ascii=False, indent=2)
+            print(f"  💾 響應已緩存")
+        except Exception as e:
+            print(f"  ⚠️  保存緩存失敗: {e}")
 
     def save_article(self, content: str, category_key: str) -> str:
         """保存文章到 _posts 目錄"""
@@ -501,6 +565,11 @@ def main():
         '--api-key',
         help='Anthropic API Key（或使用環境變數 ANTHROPIC_API_KEY）'
     )
+    parser.add_argument(
+        '--no-cache',
+        action='store_true',
+        help='禁用 AI 響應緩存'
+    )
 
     args = parser.parse_args()
 
@@ -512,7 +581,7 @@ def main():
         categories = args.categories
 
     # 創建生成器
-    generator = AutoContentGenerator(api_key=args.api_key)
+    generator = AutoContentGenerator(api_key=args.api_key, use_cache=not args.no_cache)
 
     # 運行生成
     generated_files = generator.run(categories, args.count)
