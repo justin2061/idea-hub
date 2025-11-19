@@ -110,20 +110,19 @@ jobs:
           echo "- **測試**: ${{ steps.test.outputs.test_status }}" >> $GITHUB_STEP_SUMMARY
           echo "- **失敗數**: ${{ steps.test.outputs.failed_tests }}" >> $GITHUB_STEP_SUMMARY
 
-      - name: ✅ Approve PR
+      - name: ✅ Add success comment
         if: steps.test.outputs.test_status == 'success'
         uses: actions/github-script@v7
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
 
-            // 添加批准
-            await github.rest.pulls.createReview({
+            // 添加評論（不使用 APPROVE 以避免權限問題）
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: prNumber,
-              event: 'APPROVE',
-              body: '✅ 自動審核通過\n\n所有測試均已通過，可以安全合併。\n\n---\n*由 Auto Merge Bot 自動審核*'
+              issue_number: prNumber,
+              body: '✅ 自動審核通過\n\n所有測試均已通過，準備自動合併。\n\n---\n*由 Auto Merge Bot 自動執行*'
             });
 
       - name: 🚀 Auto merge PR
