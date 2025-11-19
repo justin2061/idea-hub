@@ -59,6 +59,15 @@ social:
   links:
     - "https://github.com/justin2061"
 
+# =============================
+# Analytics 追蹤
+# =============================
+analytics:
+  provider: "google-gtag"
+  google:
+    tracking_id: "G-7BX9M8J5K4"
+    anonymize_ip: false
+
 # 搜尋功能
 search: true
 search_full_content: true
