@@ -198,7 +198,6 @@ jobs:
             auto-generated
             content
             needs-review
-          reviewers: ${{ github.actor }}
 
       - name: 📊 Summary
         if: always()
