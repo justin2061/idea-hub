@@ -1,13 +1,23 @@
+# Hugo 生成的檔案
+public/
+resources/
+
 # Jekyll 生成的檔案
 _site/
+archive/jekyll-backup/_site/
 .sass-cache/
 .jekyll-cache/
 .jekyll-metadata
 
-# Ruby 相關
+# Ruby 相關 (已封存)
 Gemfile.lock
 .bundle/
 vendor/
+
+# Obsidian 檔案
+.obsidian/workspace.json
+.obsidian/graph.json
+.obsidian/workspace-mobile.json
 
 # 系統檔案
 .DS_Store
@@ -26,10 +36,6 @@ Thumbs.db
 # 暫存檔案
 *.tmp
 *.temp
-
-# 性能優化緩存
-_tests/.cache/
-_tests/reports/
 
 # 環境變數檔案
 .env
