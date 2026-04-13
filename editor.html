@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>點子實驗室 - 文章編輯器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <style>
+        .editor-container { font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; }
+        .preview-content h1 { @apply text-3xl font-bold mt-6 mb-4; }
+        .preview-content h2 { @apply text-2xl font-bold mt-5 mb-3; }
+        .preview-content h3 { @apply text-xl font-bold mt-4 mb-2; }
+        .preview-content p { @apply mb-4 leading-relaxed; }
+        .preview-content ul { @apply list-disc ml-6 mb-4; }
+        .preview-content ol { @apply list-decimal ml-6 mb-4; }
+        .preview-content li { @apply mb-1; }
+        .preview-content code { @apply bg-gray-100 px-1 py-0.5 rounded text-sm; }
+        .preview-content pre { @apply bg-gray-100 p-4 rounded mb-4 overflow-x-auto; }
+        .preview-content blockquote { @apply border-l-4 border-blue-500 pl-4 italic mb-4; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">點子實驗室 - 文章編輯器</h1>
+            <p class="text-gray-600">支援 Hugo Front-matter 的 Markdown 編輯器</p>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- 工具列 -->
+            <div class="bg-gray-100 px-4 py-3 border-b flex items-center space-x-4">
+                <button onclick="insertTemplate()" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                    📝 新文章模板
+                </button>
+                <button onclick="insertDate()" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                    📅 插入日期
+                </button>
+                <button onclick="downloadMarkdown()" class="bg-purple-500 text-white px-3 py-1 rounded text-sm hover:bg-purple-600">
+                    💾 下載 .md
+                </button>
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-600">檔名:</label>
+                    <input type="text" id="filename" placeholder="2025-01-01-article-title" 
+                           class="border rounded px-2 py-1 text-sm w-48">
+                </div>
+            </div>
+
+            <!-- 編輯區域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2">
+                <!-- 編輯器 -->
+                <div class="border-r border-gray-200">
+                    <div class="bg-gray-50 px-4 py-2 border-b">
+                        <h3 class="text-sm font-semibold text-gray-700">Markdown 編輯</h3>
+                    </div>
+                    <textarea id="editor" class="w-full h-96 p-4 font-mono text-sm resize-none focus:outline-none"
+                              placeholder="開始寫您的文章..."></textarea>
+                </div>
+
+                <!-- 預覽 -->
+                <div>
+                    <div class="bg-gray-50 px-4 py-2 border-b">
+                        <h3 class="text-sm font-semibold text-gray-700">即時預覽</h3>
+                    </div>
+                    <div id="preview" class="h-96 p-4 overflow-y-auto preview-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Front-matter 助手 -->
+        <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold mb-4">Front-matter 助手</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">標題</label>
+                    <input type="text" id="fm-title" class="w-full border rounded px-3 py-2" placeholder="文章標題">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">日期</label>
+                    <input type="date" id="fm-date" class="w-full border rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">分類</label>
+                    <input type="text" id="fm-categories" class="w-full border rounded px-3 py-2" 
+                           placeholder='["AI工具", "技術解析"]'>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">標籤</label>
+                    <input type="text" id="fm-tags" class="w-full border rounded px-3 py-2" 
+                           placeholder='["Hugo", "Markdown", "編輯器"]'>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium mb-1">描述</label>
+                    <textarea id="fm-description" rows="2" class="w-full border rounded px-3 py-2" 
+                              placeholder="文章簡短描述"></textarea>
+                </div>
+            </div>
+            <button onclick="generateFrontMatter()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                ✨ 生成 Front-matter
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+
+        // 即時預覽
+        editor.addEventListener('input', updatePreview);
+
+        function updatePreview() {
+            const content = editor.value;
+            const parts = content.split('---');
+            
+            if (parts.length >= 3) {
+                // 有 front-matter
+                const frontMatter = parts[1];
+                const markdown = parts.slice(2).join('---');
+                
+                try {
+                    const yaml = jsyaml.load(frontMatter);
+                    let frontMatterHtml = '<div class="bg-blue-50 p-3 rounded mb-4 text-sm">';
+                    frontMatterHtml += '<strong>📋 文章資訊:</strong><br>';
+                    frontMatterHtml += `<strong>標題:</strong> ${yaml.title || 'N/A'}<br>`;
+                    frontMatterHtml += `<strong>日期:</strong> ${yaml.date || 'N/A'}<br>`;
+                    frontMatterHtml += `<strong>分類:</strong> ${Array.isArray(yaml.categories) ? yaml.categories.join(', ') : yaml.categories || 'N/A'}<br>`;
+                    frontMatterHtml += `<strong>標籤:</strong> ${Array.isArray(yaml.tags) ? yaml.tags.join(', ') : yaml.tags || 'N/A'}`;
+                    frontMatterHtml += '</div>';
+                    
+                    preview.innerHTML = frontMatterHtml + marked.parse(markdown);
+                } catch (e) {
+                    preview.innerHTML = '<div class="text-red-500">Front-matter 格式錯誤</div>' + marked.parse(content);
+                }
+            } else {
+                preview.innerHTML = marked.parse(content);
+            }
+        }
+
+        function insertTemplate() {
+            const today = new Date().toISOString().split('T')[0];
+            const template = `---
+title: "文章標題"
+date: ${today}
+draft: false
+categories: ["分類1", "分類2"]
+tags: ["標籤1", "標籤2", "標籤3"]
+author: "Justin Lee"
+description: "文章簡短描述，會顯示在搜尋結果和社群分享中。"
+---
+
+## 介紹
+
+在這裡開始您的文章內容...
+
+## 主要內容
+
+### 小標題
+
+您的內容...
+
+## 結論
+
+總結您的觀點...
+`;
+            editor.value = template;
+            updatePreview();
+        }
+
+        function insertDate() {
+            const today = new Date().toISOString().split('T')[0];
+            const filename = `${today}-article-title`;
+            document.getElementById('filename').value = filename;
+        }
+
+        function generateFrontMatter() {
+            const title = document.getElementById('fm-title').value;
+            const date = document.getElementById('fm-date').value;
+            const categories = document.getElementById('fm-categories').value;
+            const tags = document.getElementById('fm-tags').value;
+            const description = document.getElementById('fm-description').value;
+
+            let frontMatter = '---\n';
+            frontMatter += `title: "${title}"\n`;
+            frontMatter += `date: ${date}\n`;
+            frontMatter += `draft: false\n`;
+            frontMatter += `categories: ${categories}\n`;
+            frontMatter += `tags: ${tags}\n`;
+            frontMatter += `author: "Justin Lee"\n`;
+            frontMatter += `description: "${description}"\n`;
+            frontMatter += '---\n\n';
+
+            editor.value = frontMatter + (editor.value.split('---').slice(2).join('---') || '## 開始寫您的文章...\n\n');
+            updatePreview();
+        }
+
+        function downloadMarkdown() {
+            const content = editor.value;
+            const filename = document.getElementById('filename').value || 'article';
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename.endsWith('.md') ? filename : filename + '.md';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 初始化
+        insertDate();
+    </script>
+</body>
+</html> 
