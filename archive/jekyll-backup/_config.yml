@@ -1,35 +1,27 @@
-# =============================
-# 網站基本資訊
-# =============================
+# 基本網站資訊
 title: "點子實驗室 | Idea Hub"
 name: "點子實驗室"
 description: "探索 AI、創意、創業與未來工具的專業內容平台。每天分享新穎觀點與深度思考。"
-url: "https://idea-hubs.netlify.app"
-baseurl: ""
-repository: "justin2061/idea-hub"
 
-# =============================
-# 主題配置
-# =============================
-remote_theme: mmistakes/minimal-mistakes@4.26.2
-minimal_mistakes_skin: "dark" # "air", "aqua", "contrast", "dark", "dirt", "neon", "mint", "plum", "sunrise"
+# GitHub 相關設定
+url: "https://justin2061.github.io"
+baseurl: "/idea-hub"
 
-# =============================
+# 使用 Jekyll 預設主題
+# theme: minima
+
 # 網站設定
-# =============================
 locale: "zh-TW"
 title_separator: "-"
 subtitle: "探索 AI、創意、創業與未來工具的專業內容平台"
 
-# =============================
 # 作者資訊
-# =============================
 author:
   name: "Justin Lee"
   bio: "AI 探索者 • 創意思維實踐者 • 科技趨勢觀察家"
   location: "台灣"
   email: "madoka2024@email.com"
-  avatar: "/assets/images/bio-photo.jpg"
+  avatar: "/assets/images/bio-photo.jpg"  # 個人頭像
   links:
     - label: "網站"
       icon: "fas fa-fw fa-link"
@@ -41,9 +33,7 @@ author:
       icon: "fas fa-fw fa-envelope-square"
       url: "mailto:madoka2024@email.com"
 
-# =============================
-# 站點功能設定
-# =============================
+# 站點設定
 masthead_title: "點子實驗室"
 breadcrumbs: true
 words_per_minute: 200
@@ -59,67 +49,32 @@ social:
   links:
     - "https://github.com/justin2061"
 
-# =============================
-# Analytics 追蹤
-# =============================
-analytics:
-  provider: "google-gtag"
-  google:
-    tracking_id: "G-7BX9M8J5K4"
-    anonymize_ip: false
-
-# 搜尋功能
+# 搜尋功能 (技術文章推薦開啟)
 search: true
 search_full_content: true
 search_provider: lunr
 
+# 進階搜尋設定
 lunr:
   search_within_pages: true
 
 # 程式碼區塊複製按鈕
 enable_copy_code_button: true
 
-# =============================
+# 網站 logo (放在 /assets/images/ 資料夾)
+# logo: "/assets/images/site-logo.png"
+
+# Open Graph 預設圖片
+# og_image: "/assets/images/site-logo.png"
+
 # Jekyll 設定
-# =============================
 markdown: kramdown
 highlighter: rouge
 lsi: false
 excerpt_separator: "\n\n"
 incremental: false
 
-# =============================
-# 性能優化設定
-# =============================
-# 啟用增量重建（開發模式）
-# incremental: true
-
-# 限制文章數量以加快構建速度（開發模式）
-# limit_posts: 10
-
-# 禁用不必要的插件可以提高性能
-# 生產環境建議保持所有插件啟用
-
-# 壓縮 HTML 輸出（啟用以減少文件大小）
-compress_html:
-  clippings: all
-  comments: ["<!-- ", " -->"]
-  endings: [html, head, body, li, dt, dd, optgroup, option, colgroup, caption, thead, tbody, tfoot, tr, td, th]
-  profile: false
-  blanklines: false
-  ignore:
-    envs: [development]
-
-# 優化資源載入
-# 使用 CDN 加速靜態資源
-# 啟用瀏覽器緩存
-
-# 包含特定目錄
-include:
-  - _pages
-  - _headers
-
-# Markdown 處理
+# Markdown 處理 (技術文章優化)
 kramdown:
   input: GFM
   hard_wrap: false
@@ -135,15 +90,11 @@ kramdown:
       line_numbers: true
       start_line: 1
 
-# =============================
 # 分頁設定
-# =============================
-paginate: 8
+paginate: 8  # 技術文章適中的分頁數量
 paginate_path: /page:num/
 
-# =============================
-# 插件
-# =============================
+# 插件 (最小化)
 plugins:
   - jekyll-remote-theme
   - jekyll-sitemap
@@ -153,9 +104,7 @@ plugins:
   - jekyll-seo-tag
   - jekyll-gist
 
-# =============================
 # Archives
-# =============================
 category_archive:
   type: liquid
   path: /categories/
@@ -163,9 +112,7 @@ tag_archive:
   type: liquid
   path: /tags/
 
-# =============================
-# 預設設定
-# =============================
+# 預設設定 (技術文章優化)
 defaults:
   # _posts
   - scope:
@@ -179,10 +126,11 @@ defaults:
       share: true
       related: true
       show_date: true
-      toc: true
+      sidebar:
+        nav: "docs"
+      toc: true  # 技術文章顯示目錄
       toc_label: "文章目錄"
       toc_icon: "file-text"
-      toc_sticky: true
   # _pages
   - scope:
       path: "_pages"
@@ -191,9 +139,7 @@ defaults:
       layout: single
       author_profile: true
 
-# =============================
 # 頁尾連結
-# =============================
 footer:
   links:
     - label: "GitHub"
@@ -203,17 +149,13 @@ footer:
       icon: "fas fa-fw fa-envelope-square"
       url: "mailto:madoka2024@email.com"
 
-# =============================
 # 排除檔案
-# =============================
 exclude:
   - vendor
   - .bundle
   - .jekyll-assets-cache
-  - .jekyll-cache
   - .sass-cache
   - Gemfile
-  - Gemfile.lock
   - LICENSE
   - node_modules
   - package.json
@@ -221,10 +163,3 @@ exclude:
   - "*.bat"
   - "preview-simple.html"
   - "other_source_content"
-  - README.md
-  - _tabs
-
-# =============================
-# 其他設定
-# =============================
-timezone: Asia/Taipei
