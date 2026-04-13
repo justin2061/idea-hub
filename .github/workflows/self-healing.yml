@@ -29,7 +29,7 @@ env:
 permissions:
   contents: write
   issues: write
-  actions: read
+  actions: write
 
 jobs:
   # Job 1: 系統健康檢查

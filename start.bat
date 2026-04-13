@@ -1,38 +1,47 @@
 @echo off
-echo 🚀 啟動點子實驗室開發環境...
+echo 🚀 啟動點子實驗室開發環境 (Hugo)...
 echo.
 
-REM 檢查容器是否已在運行
-docker ps --filter "name=idea-hub-jekyll" --filter "status=running" | findstr "idea-hub-jekyll" >nul
-if %errorlevel% == 0 (
-    echo ✅ 容器已在運行
-    echo 📱 網站地址: http://localhost:4000
-    start http://localhost:4000
-    goto :end
-)
+echo 選擇啟動模式:
+echo 1. Hugo 本地預覽 (推薦)
+echo 2. 文章編輯器 + Hugo 預覽
+echo 3. 僅文章編輯器
+echo.
+set /p choice=請選擇 (1-3): 
 
-REM 檢查容器是否存在但已停止
-docker ps -a --filter "name=idea-hub-jekyll" | findstr "idea-hub-jekyll" >nul
-if %errorlevel% == 0 (
-    echo 🔄 重新啟動現有容器...
-    docker start idea-hub-jekyll
-    echo ⏳ 等待服務啟動...
-    timeout /t 5 /nobreak >nul
-    start http://localhost:4000
-    goto :end
-)
+if "%choice%"=="1" goto hugo_only
+if "%choice%"=="2" goto hugo_and_editor  
+if "%choice%"=="3" goto editor_only
+goto hugo_only
 
-REM 全新啟動
-echo 🏗️ 首次啟動，正在建立容器...
-docker-compose up -d
-echo ⏳ 等待服務完全啟動 (約30秒)...
-timeout /t 30 /nobreak >nul
-start http://localhost:4000
+:hugo_only
+echo 🏗️ 啟動 Hugo 本地預覽...
+start cmd /k "hugo server -D --navigateToChanged --bind 0.0.0.0 --port 1313"
+echo ⏳ 等待 Hugo 啟動...
+timeout /t 3 /nobreak >nul
+start http://localhost:1313
+goto :end
+
+:hugo_and_editor
+echo 🏗️ 啟動 Hugo 預覽...
+start cmd /k "hugo server -D --navigateToChanged --bind 0.0.0.0 --port 1313"
+echo 🏗️ 啟動文章編輯器...
+start "editor.html"
+echo ⏳ 等待服務啟動...
+timeout /t 3 /nobreak >nul
+echo 📝 編輯器已開啟
+echo 📱 Hugo 預覽: http://localhost:1313
+goto :end
+
+:editor_only
+echo 🏗️ 啟動文章編輯器...
+start "editor.html"
+goto :end
 
 :end
 echo.
 echo 💡 提示:
-echo   - 容器會保持運行以加快下次啟動
-echo   - 使用 'stop.bat' 停止容器
-echo   - 使用 'logs.bat' 查看日誌
+echo   - Hugo 預覽支援即時重載
+echo   - 編輯器可下載 .md 檔案到 content/posts/
+echo   - 使用 Ctrl+C 停止 Hugo 服務
 pause 
