@@ -4,8 +4,8 @@
 title: "點子實驗室 | Idea Hub"
 name: "點子實驗室"
 description: "探索 AI、創意、創業與未來工具的專業內容平台。每天分享新穎觀點與深度思考。"
-url: "https://justin2061.github.io"
-baseurl: "/idea-hub"
+url: "https://idea-hubs.netlify.app"
+baseurl: ""
 repository: "justin2061/idea-hub"
 
 # =============================
