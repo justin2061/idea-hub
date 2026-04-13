@@ -33,6 +33,9 @@ Thumbs.db
 # 日誌檔案
 *.log
 
+# AI 快取
+_cache/
+
 # 暫存檔案
 *.tmp
 *.temp
